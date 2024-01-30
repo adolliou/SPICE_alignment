@@ -5,6 +5,11 @@ import numpy as np
 import pytest
 from ..alignement import Alignment
 from pathlib import Path
+from astropy.io import fits
+from ...plot import plot
+from astropy.visualization import ImageNormalize, LogStretch
+from ...utils.Util import EUIUtil
+import astropy.units as u
 
 
 # @pytest.fixture
@@ -16,8 +21,6 @@ from pathlib import Path
 
 
 def test_alignement_helioprojective_shift():
-
-
     path_fsi = os.path.join(Path().absolute(), "SPICE_alignment", "hdrshift", "test",
                             "fitsfiles", "solo_L2_eui-fsi174-image_20220317T095045281_V01.fits")
     path_hri = os.path.join(Path().absolute(), "SPICE_alignment", "hdrshift", "test",
@@ -36,15 +39,16 @@ def test_alignement_helioprojective_shift():
     max_value = 1310
 
     A = Alignment(large_fov_known_pointing=path_fsi, small_fov_to_correct=path_hri, lag_crval1=lag_crval1,
-                   lag_crval2=lag_crval2, lag_cdelta1=lag_cdelta1, lag_cdelta2=lag_cdelta2, lag_crota=lag_crota,
-                   parallelism=parallelism, use_tqdm=True, counts_cpu_max=20,
-                   small_fov_value_min=min_value, small_fov_value_max=max_value, )
+                  lag_crval2=lag_crval2, lag_cdelta1=lag_cdelta1, lag_cdelta2=lag_cdelta2, lag_crota=lag_crota,
+                  parallelism=True, use_tqdm=True, counts_cpu_max=20,
+                  small_fov_value_min=min_value, small_fov_value_max=max_value, )
 
     corr = A.align_using_helioprojective(method='correlation')
     max_index = np.unravel_index(corr.argmax(), corr.shape)
 
     assert lag_crval1[max_index[0]] == 24
     assert lag_crval2[max_index[1]] == 8
+
 
 def test_alignement_carrington():
     folder = 'C:/Users/adolliou/PycharmProjects/Alignement/test'
@@ -69,15 +73,18 @@ def test_alignement_carrington():
     min_value = 0
     max_value = 1310
 
-
     A = Alignment(large_fov_known_pointing=path_fsi, small_fov_to_correct=path_hri, lag_crval1=lag_crval1,
-                   lag_crval2=lag_crval2, lag_cdelta1=lag_cdelta1, lag_cdelta2=lag_cdelta2, lag_crota=lag_crota,
-                   parallelism=parallelism, use_tqdm=True,
-                   small_fov_value_min=min_value,
-                   small_fov_value_max=max_value, lag_solar_r=lag_solar_r, )
+                  lag_crval2=lag_crval2, lag_cdelta1=lag_cdelta1, lag_cdelta2=lag_cdelta2, lag_crota=lag_crota,
+                  parallelism=parallelism, use_tqdm=True,
+                  small_fov_value_min=min_value,
+                  small_fov_value_max=max_value, lag_solar_r=lag_solar_r, )
     corr = A.align_using_carrington(method='correlation', shape=shape, lonlims=lonlims, latlims=latlims,
                                     reference_date=reference_date)
     max_index = np.unravel_index(corr.argmax(), corr.shape)
 
     assert lag_crval1[max_index[0]] == 22
     assert lag_crval2[max_index[1]] == 7
+
+
+if __name__ == "__main__":
+    test_alignement_helioprojective_shift()

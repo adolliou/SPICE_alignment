@@ -1,10 +1,10 @@
+import copy
+
 import numpy as np
 import multiprocessing as mp
 from functools import partial
 from tqdm import tqdm
-import scipy.interpolate
-import cv2
-import scipy.ndimage
+from multiprocessing import Process, Lock
 import astropy.io.fits as Fits
 from . import c_correlate
 from ..utils import rectify
@@ -13,7 +13,6 @@ import astropy.units as u
 from ..plot import plot
 import warnings
 from ..utils import Util
-from astropy.time import Time
 
 
 class Alignment:
@@ -80,6 +79,13 @@ class Alignment:
         self.use_tqdm = use_tqdm
         self.marker = False
 
+        self._large = None
+        self._small = None
+
+        self._correlation = None
+
+        self.lock = Lock()
+
     def _shift_header(self, hdr, **kwargs):
         if 'd_crval1' in kwargs.keys():
             if self.unit_lag == hdr["CUNIT1"]:
@@ -110,7 +116,6 @@ class Alignment:
                     hdr["CROTA"] = crot
                     # raise NotImplementedError
         if ((('d_cdelta1' in kwargs.keys()) or ('d_cdelta2' in kwargs.keys()) or ('d_crota' in kwargs.keys()))):
-
             rho = np.arccos(hdr["PC1_1"])
             lam = hdr["CDELT2"] / hdr["CDELT1"]
             hdr["PC1_1"] = np.cos(rho)
@@ -118,7 +123,8 @@ class Alignment:
             hdr["PC1_2"] = -lam * np.sin(rho)
             hdr["PC2_1"] = (1 / lam) * np.sin(rho)
 
-    def _iteration_step_along_crval2(self, d_crval1, d_cdelta1, d_cdelta2, d_crota, d_solar_r, method: str, ):
+    def _iteration_step_along_crval2(self, d_crval1, d_cdelta1, d_cdelta2, d_crota, d_solar_r, method: str,
+                                     position: tuple, lock=None):
 
         results = np.zeros(len(self.lag_crval2), dtype=np.float64)
         if self.use_tqdm:
@@ -133,42 +139,54 @@ class Alignment:
                                          d_cdelta1=d_cdelta1, d_cdelta2=d_cdelta2, d_crota=d_crota,
                                          method=method, d_solar_r=d_solar_r,
                                          )
+        # if lock is not None:
+        lock.acquire()
+        shmm_correlation, data_correlation = Util.MpUtils.gen_shmm(create=False, **self._correlation)
+        data_correlation[position[0], :, position[1], position[2], position[3],  position[4]] = results
+        # print(f'{data_correlation[:, :, position[1], position[2], position[3],  position[4]]}')
 
-        return results
+        lock.release()
+        # shmm_large, data_large = Util.MpUtils.gen_shmm(create=False, **self._large)
+        # assert self.data_large == data_large
+        # shmm_small, data_small = Util.MpUtils.gen_shmm(create=False, **self._small)
+        # assert self.data_small == data_small
+
+        # if lock is not None:
 
     def _step(self, d_crval2, d_crval1, d_cdelta1, d_cdelta2, d_crota, d_solar_r, method: str, ):
         # print(hdr_small['CRVAL1'])
         # print(self.crval1_ref)
+        shmm_large, data_large = Util.MpUtils.gen_shmm(create=False, **self._large)
+        shmm_small, data_small = Util.MpUtils.gen_shmm(create=False, **self._small)
 
         hdr_small_shft = self.hdr_small.copy()
         self._shift_header(hdr_small_shft, d_crval1=d_crval1, d_crval2=d_crval2,
                            d_cdelta1=d_cdelta1, d_cdelta2=d_cdelta2,
                            d_crota=d_crota)
 
-        data_small = self.function_to_apply(d_solar_r=d_solar_r, data=self.data_small,
-                                            hdr=hdr_small_shft)
+        data_small_interp = self.function_to_apply(d_solar_r=d_solar_r, data=data_small, hdr=hdr_small_shft)
 
-        condition_1 = np.ones(len(data_small.ravel()), dtype='bool')
-        condition_2 = np.ones(len(data_small.ravel()), dtype='bool')
+        condition_1 = np.ones(len(data_small_interp.ravel()), dtype='bool')
+        condition_2 = np.ones(len(data_small_interp.ravel()), dtype='bool')
 
         if self.small_fov_value_min is not None:
-            condition_1 = np.array(data_small.ravel() > self.small_fov_value_min, dtype='bool')
+            condition_1 = np.array(data_small_interp.ravel() > self.small_fov_value_min, dtype='bool')
         if self.small_fov_value_max is not None:
-            condition_2 = np.array(data_small.ravel() < self.small_fov_value_max, dtype='bool')
+            condition_2 = np.array(data_small_interp.ravel() < self.small_fov_value_max, dtype='bool')
 
         if method == 'correlation':
 
             lag = [0]
-            is_nan = np.array((np.isnan(self.data_large.ravel(), dtype='bool')
-                               | (np.isnan(data_small.ravel(), dtype='bool'))),
+            is_nan = np.array((np.isnan(data_large.ravel(), dtype='bool')
+                               | (np.isnan(data_small_interp.ravel(), dtype='bool'))),
                               dtype='bool')
-            return c_correlate.c_correlate(self.data_large.ravel()[(~is_nan) & (condition_1) & (condition_2)],
-                                           data_small.ravel()[(~is_nan) & (condition_1) & (condition_2)],
+            return c_correlate.c_correlate(data_large.ravel()[(~is_nan) & (condition_1) & (condition_2)],
+                                           data_small_interp.ravel()[(~is_nan) & (condition_1) & (condition_2)],
                                            lags=lag)
 
         elif method == 'residus':
-            norm = np.sqrt(self.data_large.ravel())
-            diff = (self.data_large.ravel() - data_small.ravel()) / norm
+            norm = np.sqrt(data_large.ravel())
+            diff = (data_large.ravel() - data_small_interp.ravel()) / norm
             return np.std(diff[(condition_1) & (condition_2)])
         else:
             raise NotImplementedError
@@ -212,7 +230,9 @@ class Alignment:
         f_large = Fits.open(self.large_fov_known_pointing)
         f_small = Fits.open(self.small_fov_to_correct)
 
-        self.data_large = np.array(f_large[self.large_fov_window].data.copy(), dtype=np.float64)
+        dat_large_var = np.array(f_large[self.large_fov_window].data.copy(), dtype=np.float64)
+        self.data_large = dat_large_var
+
         self.hdr_large = f_large[self.large_fov_window].header.copy()
         self._recenter_crpix_in_header(self.hdr_large)
 
@@ -228,7 +248,6 @@ class Alignment:
 
     def _find_best_header_parameters(self):
 
-        data_large = self.data_large
         naxis1, naxis2 = self._get_naxis(self.hdr_large)
 
         if (self.hdr_large["CRPIX1"] != (naxis1 + 1) / 2) or (self.hdr_large["CRPIX2"] != (naxis2 + 1) / 2):
@@ -291,54 +310,99 @@ class Alignment:
             self.lag_solar_r = np.array([1.004])
         results = np.empty((len(self.lag_crval1), len(self.lag_crval2), len(self.lag_cdelta1), len(self.lag_cdelta2),
                             len(self.lag_crota), len(self.lag_solar_r)), dtype=np.float64)
+
+        shmm_correlation, data_correlation = Util.MpUtils.gen_shmm(create=True, ndarray=results)
+        self._correlation = {"name": shmm_correlation.name, "size": data_correlation.size,
+                             "shape": data_correlation.shape}
+        del results
+
         if self.parallelism:
             # if (len(self.lag_cdelta1) > 1) or (len(self.lag_crota) > 1) or (len(self.lag_cdelta2) > 1):
             #     raise NotImplementedError
             # else:
-
             for kk, d_solar_r in enumerate(self.lag_solar_r):
+                Processes = []
+
                 if self.coordinate_frame == "carrington":
-                    self.data_large = self.function_to_apply(d_solar_r=d_solar_r, data=data_large,
+                    self.data_large = self.function_to_apply(d_solar_r=d_solar_r, data=self.data_large,
                                                              hdr=self.hdr_large)
                 elif self.coordinate_frame == "helioprojective":
-                    self.data_large = self._create_submap_of_large_data(data_large=data_large)
+                    self.data_large = self._create_submap_of_large_data(data_large=self.data_large)
+
+                shmm_large, data_large = Util.MpUtils.gen_shmm(create=True, ndarray=copy.deepcopy(self.data_large))
+                self._large = {"name": shmm_large.name, "dtype": data_large.dtype, "shape": data_large.shape}
+                del self.data_large
+
+                shmm_small, data_small = Util.MpUtils.gen_shmm(create=True, ndarray=copy.deepcopy(self.data_small))
+                self._small = {"name": shmm_small.name, "dtype": data_small.dtype, "shape": data_small.shape}
+                del self.data_small
+
                 for ii, d_cdelta1 in enumerate(self.lag_cdelta1):
                     for ll, d_cdelta2 in enumerate(self.lag_cdelta2):
                         for jj, d_crota in enumerate(self.lag_crota):
+                            for ff, d_crval1 in enumerate(self.lag_crval1):
+                                kwargs = {
+                                    "d_crval1":  d_crval1,
+                                    "d_cdelta1": d_cdelta1,
+                                    "d_cdelta2": d_cdelta2,
+                                    "d_crota": d_crota,
+                                    "d_solar_r": d_solar_r,
+                                    "method": self.method,
+                                    "lock": self.lock,
+                                    "position": (ff, ii, ll, jj, kk),
 
-                            count = self.counts
-                            if self.counts > mp.cpu_count(): count = mp.cpu_count() - 10
-                            pool = mp.Pool(count)
-                            results[:, :, ii, ll, jj, kk] = pool.map(partial(self._iteration_step_along_crval2,
-                                                                             d_cdelta1=d_cdelta1,
-                                                                             d_cdelta2=d_cdelta2,
-                                                                             d_crota=d_crota,
-                                                                             method=self.method,
-                                                                             d_solar_r=d_solar_r, ),
-                                                                     self.lag_crval1)
-                            pool.close()
+                                }
+
+                                Processes.append(Process(target=self._iteration_step_along_crval2, kwargs=kwargs))
+
+                for bb in range(len(Processes)):
+                    Processes[bb].start()
+                #
+                for bb in range(len(Processes)):
+                    Processes[bb].join()
+                # pool = mp.Pool(count)
+                # results[:, :, ii, ll, jj, kk] = pool.map(partial(self._iteration_step_along_crval2,
+                #                                                  d_cdelta1=d_cdelta1,
+                #                                                  d_cdelta2=d_cdelta2,
+                #                                                  d_crota=d_crota,
+                #                                                  method=self.method,
+                #                                                  d_solar_r=d_solar_r, ),
+                #                                          self.lag_crval1)
+
+
 
         else:
             for hh, d_solar_r in enumerate(self.lag_solar_r):
                 if self.coordinate_frame == "carrington":
-                    self.data_large = self.function_to_apply(d_solar_r=d_solar_r, data=data_large,
+                    self.data_large = self.function_to_apply(d_solar_r=d_solar_r, data=self.data_large,
                                                              hdr=self.hdr_large)
                 elif self.coordinate_frame == "helioprojective":
-                    self.data_large = self._create_submap_of_large_data(data_large=data_large)
+                    self.data_large = self._create_submap_of_large_data(data_large=self.data_large)
+
+                shmm_large, data_large = Util.MpUtils.gen_shmm(create=True, ndarray=self.data_large)
+                self._large = {"name": shmm_large.name, "dtype": data_large.dtype, "shape": data_large.shape}
+                self.data_large = None
+
+                shmm_small, data_small = Util.MpUtils.gen_shmm(create=True, ndarray=self.data_small)
+                self._small = {"name": shmm_small.name, "dtype": data_small.dtype, "shape": data_small.shape}
+                self.data_small = None
 
                 for ii, d_crval1 in enumerate(self.lag_crval1):
                     for jj, d_crval2 in enumerate(tqdm(self.lag_crval2)):
                         for kk, d_cdelta1 in enumerate(self.lag_cdelta1):
                             for mm, d_cdelta2 in enumerate(self.lag_cdelta2):
                                 for ll, d_crota in enumerate(self.lag_crota):
-                                    results[ii, jj, kk, mm, ll, hh] = self._step(d_crval2=d_crval2, d_crval1=d_crval1,
-                                                                                 d_cdelta1=d_cdelta1,
-                                                                                 d_cdelta2=d_cdelta2,
-                                                                                 d_crota=d_crota,
-                                                                                 method=self.method, d_solar_r=d_solar_r
-                                                                                 )
+                                    data_correlation[ii, jj, kk, mm, ll, hh] = self._step(d_crval2=d_crval2,
+                                                                                          d_crval1=d_crval1,
+                                                                                          d_cdelta1=d_cdelta1,
+                                                                                          d_cdelta2=d_cdelta2,
+                                                                                          d_crota=d_crota,
+                                                                                          method=self.method,
+                                                                                          d_solar_r=d_solar_r,
 
-        return results
+                                                                                          )
+        shmm_correlation, data_correlation = Util.MpUtils.gen_shmm(create=False, **self._correlation)
+        return copy.deepcopy(data_correlation)
 
     def _recenter_crpix_in_header(self, hdr):
         w = WCS(hdr)
@@ -385,7 +449,7 @@ class Alignment:
 
     def _create_submap_of_large_data(self, data_large):
         if self.path_save_figure is not None:
-            plot.PlotFunctions.simple_plot(self.hdr_large, self.data_large, show=False,
+            plot.PlotFunctions.simple_plot(self.hdr_large, data_large, show=False,
                                            path_save='%s/large_fov_before_cut.pdf' % (self.path_save_figure))
 
         hdr_cut = self.hdr_small.copy()
@@ -427,7 +491,8 @@ class Alignment:
         w_xy_small = WCS(hdr)
         longitude_large, latitude_large, dsun_obs_large = Util.EUIUtil.extract_EUI_coordinates(self.hdr_large)
         x_large, y_large = w_xy_small.world_to_pixel(longitude_large, latitude_large)
-        image_small_shft = Util.CommonUtil.interpol2d(np.array(data, dtype=np.float64), x=x_large, y=y_large, order=1,
+        image_small_shft = Util.CommonUtil.interpol2d(np.array(copy.deepcopy(data), dtype=np.float64),
+                                                      x=x_large, y=y_large, order=1,
                                                       fill=-32768)
         image_small_shft = np.where(image_small_shft == -32768, np.nan, image_small_shft)
 

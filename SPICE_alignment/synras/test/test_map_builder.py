@@ -4,6 +4,7 @@ import astropy.units as u
 from ..map_builder import SPICEComposedMapBuilder
 from astropy.io import fits
 
+
 def test_map_builder_spice():
     list_path_fsi_2 = [
         os.path.join(Path().absolute(), "SPICE_alignment", "synras", "test",
@@ -19,18 +20,18 @@ def test_map_builder_spice():
     window_imager = -1  # same for imagers in imager_list
     threshold_time = u.Quantity(1000, "s")  # maximum threshold time you want
     output_L3_fits_folder = os.path.join(Path().absolute(), "SPICE_alignment", "synras", "test",
-                                  "fitsfiles")
+                                         "fitsfiles")
 
     C = SPICEComposedMapBuilder(path_to_spectro=path_spice, list_imager_paths=list_path_fsi_2,
                                 window_imager=window_imager, window_spectro=window_spice,
                                 threshold_time=threshold_time)
     C.process(path_output=output_L3_fits_folder, basename_output="test_map_builder.fits")
 
-    path_map_build =  os.path.join(Path().absolute(), "SPICE_alignment", "synras", "test",
+    path_map_build = os.path.join(Path().absolute(), "SPICE_alignment", "synras", "test",
                                   "fitsfiles", "test_map_builder.fits")
 
-    path_map_build_ref =  os.path.join(Path().absolute(), "SPICE_alignment", "synras", "test",
-                                  "fitsfiles", "test_map_builder_ref.fits")
+    path_map_build_ref = os.path.join(Path().absolute(), "SPICE_alignment", "synras", "test",
+                                      "fitsfiles", "test_map_builder_ref.fits")
 
     with fits.open(path_map_build) as hdul:
         with fits.open(path_map_build_ref) as hdul_ref:
