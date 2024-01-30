@@ -1,14 +1,14 @@
-from .alignement import Alignement
+from .alignement import Alignment
 import numpy as np
 from astropy.io import fits
 from astropy.wcs import WCS
 import astropy.units as u
-from .map_builder import SPICEComposedMapBuilder
+from ..synras import map_builder
 from . import c_correlate
 import copy
-from . import Util
+from ..utils import Util
 
-class AlignementSpice(Alignement):
+class AlignmentSpice(Alignment):
     def __init__(self, large_fov_known_pointing: str, small_fov_to_correct: str, lag_crval1: np.array,
                  lag_crval2: np.array, lag_cdelta1, lag_cdelta2, lag_crota, small_fov_value_min=None,
                  parallelism=False, small_fov_value_max=None, counts_cpu_max=40, large_fov_window=-1,
@@ -175,7 +175,7 @@ class AlignementSpice(Alignement):
         self.hdr_small["NAXIS2"] = self.data_small.shape[0]
 
 
-class AlignementSpice_iterative_context_raster(AlignementSpice):
+class AlignementSpice_iterative_context_raster(AlignmentSpice):
     def __init__(self, large_fov_list_paths: list, small_fov_to_correct: str, threshold_time: u.Quantity,
                  lag_crval1: np.array,
                  lag_crval2: np.array, lag_cdelta1, lag_cdelta2, lag_crota, small_fov_value_min=None,
@@ -206,7 +206,7 @@ class AlignementSpice_iterative_context_raster(AlignementSpice):
         self._shift_header(hdr_small_shft_unflattened, d_crval1=d_crval1, d_crval2=d_crval2,
                            d_cdelta1=d_cdelta1, d_cdelta2=d_cdelta2,
                            d_crota=d_crota)
-        C = SPICEComposedMapBuilder(path_to_spectro=self.small_fov_to_correct,
+        C = map_builder.SPICEComposedMapBuilder(path_to_spectro=self.small_fov_to_correct,
                                list_imager_paths=self.large_fov_list_paths,
                                threshold_time=self.threshold_time,
                                window_imager=self.large_fov_window, window_spectro=self.small_fov_window)
@@ -246,7 +246,7 @@ class AlignementSpice_iterative_context_raster(AlignementSpice):
             raise NotImplementedError
 
     def _extract_imager_data_header(self, ):
-        C = SPICEComposedMapBuilder(path_to_spectro=self.small_fov_to_correct,
+        C = map_builder.SPICEComposedMapBuilder(path_to_spectro=self.small_fov_to_correct,
                                list_imager_paths=self.large_fov_list_paths,
                                threshold_time=self.threshold_time,
                                window_imager=self.large_fov_window, window_spectro=self.small_fov_window)

@@ -6,7 +6,7 @@ import numpy as np
 from astropy.io import fits
 from astropy.time import Time
 import astropy.units as u
-from . import Util
+from ..utils import Util
 # from tqdm import tqdm
 import warnings
 
@@ -188,6 +188,12 @@ class ComposedMapBuilder(MapBuilder):
 
 class SPICEComposedMapBuilder(ComposedMapBuilder):
 
+    def __init__(self, path_to_spectro: str, list_imager_paths: list, threshold_time: u.Quantity,
+                 window_imager=-1, window_spectro=0, ):
+        super().__init__(path_to_spectro=path_to_spectro, list_imager_paths=list_imager_paths,
+                         threshold_time=threshold_time,
+                         window_imager=window_imager, window_spectro=window_spectro, )
+
     def _prepare_spectro_data(self, hdr_spice, keep_original_imager_pixel_size, level):
         if level == 2:
             w_spice = WCS(hdr_spice)
@@ -312,10 +318,10 @@ class EISComposedMapBuilder(ComposedMapBuilder):
         longitude_spice_, latitude_spice_ = w_eis.pixel_to_world(x, y)
         # longitude_spice = np.empty((hdr_eis["NAXIS2"], hdr_eis["NAXIS1"],  1), dtype="object")
         # latitude_spice = np.empty((hdr_eis["NAXIS2"], hdr_eis["NAXIS1"],  1), dtype="object")
-        longitude_spice = longitude_spice_.reshape((hdr_eis["NAXIS2"], hdr_eis["NAXIS1"],  1))
-        latitude_spice = latitude_spice_.reshape((hdr_eis["NAXIS2"], hdr_eis["NAXIS1"],  1))
+        longitude_spice = longitude_spice_.reshape((hdr_eis["NAXIS2"], hdr_eis["NAXIS1"], 1))
+        latitude_spice = latitude_spice_.reshape((hdr_eis["NAXIS2"], hdr_eis["NAXIS1"], 1))
 
-        utc_spice = np.empty((hdr_eis["NAXIS2"], hdr_eis["NAXIS1"],  1), dtype="object")
+        utc_spice = np.empty((hdr_eis["NAXIS2"], hdr_eis["NAXIS1"], 1), dtype="object")
 
         for ii in range(hdr_eis["NAXIS1"]):
             # if date_avg

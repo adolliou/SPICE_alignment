@@ -38,7 +38,7 @@ We show here a typical example to align SPICE data with a synthetic raster creat
 ### Creation of a SPICE synthetic raster 
 First of all, we need to create a synthetic raster of the SPICE raster using the reference SPICE raster and a list of the imager fits files. 
 ```python
-from Alignement_simple.map_builder import SPICEComposedMapBuilder
+from SPICE_alignment.synras.map_builder import SPICEComposedMapBuilder
 from glob import glob
 import astropy.units as u
 
@@ -62,9 +62,9 @@ It returns a cross-correlation matrix that can be used to determine the optimal 
 
 ```python
 import numpy as np
-from Alignement_simple.plot import PlotFunctions
-from Alignement_simple.Util import SpiceUtil
-from Alignement_simple.alignement_spice import AlignementSpice
+from SPICE_alignment.plot.plot import PlotFunctions
+from SPICE_alignment.utils.Util import SpiceUtil
+from SPICE_alignment.hdrshift.alignement_spice import AlignmentSpice
 
 
 path_to_synthetic_raster_fits = "path/to/input/synthetic_raster.fits"
@@ -80,7 +80,7 @@ lag_cdelt1 = np.array([0]) # in arcsec
 lag_cdelt2 = np.array([0]) # in arcsec
 parallelism = True
 
-A = AlignementSpice(large_fov_known_pointing=path_to_synthetic_raster_fits, small_fov_to_correct=path_spice_input,
+A = AlignmentSpice(large_fov_known_pointing=path_to_synthetic_raster_fits, small_fov_to_correct=path_spice_input,
                         lag_crval1=lag_crval1, lag_crval2=lag_crval2, lag_crota=lag_crota, use_tqdm=True,
                         lag_cdelta1=lag_cdelt1, lag_cdelta2=lag_cdelt2, parallelism=parallelism,
                         large_fov_window=-1, small_fov_window=window_sr,
@@ -92,7 +92,7 @@ SpiceUtil.write_corrected_fits(path_spice_l2_input=path_spice_input,
                                path_spice_l2_output="path/where/to/save/corrected/fits", lag_crval1=lag_crval1, 
                                lag_crval2=lag_crval2, corr=corr, window_spice=window_spice)
 
-PlotFunctions.plot_spice_co_alignement(imager_window=-1, large_fov_fits_path=path_to_synthetic_raster_fits,
+PlotFunctions.plot_spice_co_alignment(imager_window=-1, large_fov_fits_path=path_to_synthetic_raster_fits,
                                            corr=corr, raster_window= window_spice, levels_percentile=[80, 90],
                                            results_folder=None, spice_raster_path=path_spice_input, show=True,
                                            lag_crval1=lag_crval1, lag_crval2=lag_crval2)
@@ -105,9 +105,10 @@ Example of a results for co-alignment between SPICE and FSI 304, from plot_spice
 
 ## credits
 
-- carrington transform: [rectify](https://github.com/frederic-auchere)
+- carrington transform: [F. Auchère](https://github.com/frederic-auchere)
 - SPICE utils: [G. Pelouze](https://github.com/gpelouze)
-- 
+- matric transform: [F. Auchère](https://github.com/frederic-auchere)
+
 ## Contact
 
 Author: Antoine Dolliou (antoine.dolliou@universite-paris-saclay.fr)

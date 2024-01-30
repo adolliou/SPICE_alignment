@@ -7,9 +7,8 @@ from astropy.visualization import ImageNormalize, LogStretch, PowerStretch, Line
 import matplotlib.patches as patches
 import cv2
 import scipy
-from . import Util
 from astropy.io import fits
-from Alignement_simple.Util import SpiceUtil, EUIUtil, PlotFits, CommonUtil
+from ..utils.Util import SpiceUtil, EUIUtil, PlotFits, CommonUtil
 from astropy.time import Time
 import os
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -184,7 +183,7 @@ class PlotFunctions:
     def simple_plot(hdr_main, data_main, path_save=None, show=False, ax=None, fig=None, norm=None,
                     show_xlabel=True, show_ylabel=True, plot_colorbar=True, cmap="plasma"):
 
-        longitude, latitude, dsun = Util.EUIUtil.extract_EUI_coordinates(hdr_main)
+        longitude, latitude, dsun = EUIUtil.extract_EUI_coordinates(hdr_main)
         longitude_grid, latitude_grid = PlotFunctions._build_regular_grid(longitude=longitude, latitude=latitude)
         w = WCS(hdr_main)
         x, y = w.world_to_pixel(longitude_grid, latitude_grid)
@@ -224,9 +223,9 @@ class PlotFunctions:
                      ax=None, fig=None, norm=None, show_xlabel=True, show_ylabel=True, plot_colorbar=True,
                      header_coordinates_plot=None, cmap="plasma", return_grid=False, aspect=1):
         if header_coordinates_plot is None:
-            longitude_main, latitude_main = Util.EUIUtil.extract_EUI_coordinates(hdr_contour, dsun=False)
+            longitude_main, latitude_main = EUIUtil.extract_EUI_coordinates(hdr_contour, dsun=False)
         else:
-            longitude_main, latitude_main = Util.EUIUtil.extract_EUI_coordinates(header_coordinates_plot, dsun=False)
+            longitude_main, latitude_main = EUIUtil.extract_EUI_coordinates(header_coordinates_plot, dsun=False)
 
         longitude_grid, latitude_grid = PlotFunctions._build_regular_grid(longitude=longitude_main,
                                                                           latitude=latitude_main)
@@ -244,8 +243,8 @@ class PlotFunctions:
                                        x=x_contour, y=y_contour,
                                        order=1, fill=-32768)
         image_contour_cut[image_contour_cut == -32768] = np.nan
-        longitude_grid_arc = Util.CommonUtil.ang2pipi(longitude_grid).to("arcsec").value
-        latitude_grid_arc = Util.CommonUtil.ang2pipi(latitude_grid).to("arcsec").value
+        longitude_grid_arc = CommonUtil.ang2pipi(longitude_grid).to("arcsec").value
+        latitude_grid_arc = CommonUtil.ang2pipi(latitude_grid).to("arcsec").value
         dlon = longitude_grid_arc[1, 1] - longitude_grid_arc[0, 0]
         dlat = latitude_grid_arc[1, 1] - latitude_grid_arc[0, 0]
         return_im = True
@@ -333,14 +332,14 @@ class PlotFunctions:
             min = np.percentile(data_contour_2[~isnan], 5)
             max = np.percentile(data_contour_2[~isnan], 98)
             norm_contour = ImageNormalize(stretch=LinearStretch(), vmin=min, vmax=max)
-        longitude_grid_arc = Util.CommonUtil.ang2pipi(lon_grid).to("arcsec").value
-        latitude_grid_arc = Util.CommonUtil.ang2pipi(lat_grid).to("arcsec").value
+        longitude_grid_arc = CommonUtil.ang2pipi(lon_grid).to("arcsec").value
+        latitude_grid_arc = CommonUtil.ang2pipi(lat_grid).to("arcsec").value
         dlon = longitude_grid_arc[1, 1] - longitude_grid_arc[0, 0]
         dlat = latitude_grid_arc[1, 1] - latitude_grid_arc[0, 0]
 
         w_xy = WCS(hdr_contour_2)
         x, y = w_xy.world_to_pixel(lon_grid, lat_grid)
-        data_contour_2_interp = Util.CommonUtil.interpol2d(data_contour_2, x=x, y=y, order=1, fill=-32762)
+        data_contour_2_interp = CommonUtil.interpol2d(data_contour_2, x=x, y=y, order=1, fill=-32762)
         data_contour_2_interp = np.where(data_contour_2_interp == -32762, np.nan, data_contour_2_interp)
         im3 = ax3.imshow(data_contour_2_interp, origin="lower", interpolation="none", norm=norm_contour, cmap=cmap2,
                          aspect=aspect,
@@ -353,8 +352,8 @@ class PlotFunctions:
         else:
             cbar3 = fig.colorbar(im3, cax=ax_cbar2, label="unkown", pad=-0.5, fraction=0.001)
 
-        ax1.set_title("(a) Before alignement")
-        ax2.set_title("(b) After alignement")
+        ax1.set_title("(a) Before alignment")
+        ax2.set_title("(b) After alignment")
         ax3.set_title("(c) Aligned image")
 
         if show:
@@ -369,10 +368,10 @@ class PlotFunctions:
         dlon = np.abs((longitude[1, 1] - longitude[0, 0]).to(u.deg).value)
         dlat = np.abs((latitude[1, 1] - latitude[0, 0]).to(u.deg).value)
         longitude_grid, latitude_grid = np.meshgrid(
-            np.arange(np.min(Util.CommonUtil.ang2pipi(longitude).to(u.deg).value),
-                      np.max(Util.CommonUtil.ang2pipi(longitude).to(u.deg).value), dlon),
-            np.arange(np.min(Util.CommonUtil.ang2pipi(latitude).to(u.deg).value),
-                      np.max(Util.CommonUtil.ang2pipi(latitude).to(u.deg).value), dlat))
+            np.arange(np.min(CommonUtil.ang2pipi(longitude).to(u.deg).value),
+                      np.max(CommonUtil.ang2pipi(longitude).to(u.deg).value), dlon),
+            np.arange(np.min(CommonUtil.ang2pipi(latitude).to(u.deg).value),
+                      np.max(CommonUtil.ang2pipi(latitude).to(u.deg).value), dlat))
 
         longitude_grid = longitude_grid * u.deg
         latitude_grid = latitude_grid * u.deg
@@ -380,12 +379,12 @@ class PlotFunctions:
         return longitude_grid, latitude_grid
 
     @staticmethod
-    def plot_spice_co_alignement(imager_window, large_fov_fits_path, corr,
+    def plot_spice_co_alignment(imager_window, large_fov_fits_path, corr,
                            raster_window, spice_raster_path, levels_percentile=[0.8, 0.9],
                            lag_crval1=None, lag_crval2=None, larg_crota=None, lag_cdelt1=None, lag_cdelt2=None,
                                  show=False, results_folder=None,):
 
-        parameter_alignement = {
+        parameter_alignment = {
             "crval1": lag_crval1,
             "crval2": lag_crval2,
             "crota": larg_crota,
@@ -433,25 +432,25 @@ class PlotFunctions:
 
                 hdr_spice_shifted = header_spice.copy()
                 hdr_spice_shifted["CRVAL1"] = hdr_spice_shifted["CRVAL1"] \
-                                              + u.Quantity(parameter_alignement['crval1'][max_index[0]], "arcsec").to(
+                                              + u.Quantity(parameter_alignment['crval1'][max_index[0]], "arcsec").to(
                     "deg").value
                 hdr_spice_shifted["CRVAL2"] = hdr_spice_shifted["CRVAL2"] \
-                                              + u.Quantity(parameter_alignement['crval2'][max_index[1]], "arcsec").to(
+                                              + u.Quantity(parameter_alignment['crval2'][max_index[1]], "arcsec").to(
                     "deg").value
                 change_pcij = False
-                if parameter_alignement['crota'] is not None:
+                if parameter_alignment['crota'] is not None:
                     hdr_spice_shifted["CROTA"] = hdul_spice[raster_window].header["CROTA"] + \
-                                                 parameter_alignement['crota'][max_index[4]]
+                                                 parameter_alignment['crota'][max_index[4]]
                     change_pcij = True
 
-                if parameter_alignement['cdelt1'] is not None:
+                if parameter_alignment['cdelt1'] is not None:
                     hdr_spice_shifted["CDELT1"] = hdul_spice[raster_window].header["CDELT1"] + \
-                                                  parameter_alignement['cdelt1'][max_index[2]]
+                                                  parameter_alignment['cdelt1'][max_index[2]]
                     change_pcij = True
 
-                if parameter_alignement['cdelt2'] is not None:
+                if parameter_alignment['cdelt2'] is not None:
                     hdr_spice_shifted["CDELT2"] = hdul_spice[raster_window].header["CDELT2"] + \
-                                                  parameter_alignement['cdelt2'][max_index[3]]
+                                                  parameter_alignment['cdelt2'][max_index[3]]
                     change_pcij = True
                 if change_pcij:
                     theta = u.Quantity(hdr_spice_shifted["CROTA"], "deg").to("radian").value
@@ -491,7 +490,7 @@ class PlotFunctions:
                 fig.suptitle(f"SPICE raster {date} aligned with {detector} {wave} synthetic raster")
                 # fig.suptitle("Alignement of SPICE  using a synthetic raster of HRIEUV images")
                 if results_folder is not None:
-                    fig.savefig('%s/compare_SPICE_SR_alignement.pdf' % (results_folder))
+                    fig.savefig('%s/compare_SPICE_SR_alignment.pdf' % (results_folder))
                 if show:
                     fig.show()
                 date = Time(hdul_spice[raster_window].header["DATE-AVG"]).fits[:19]
@@ -556,7 +555,7 @@ class PlotFunctions:
                 ax.set_title("SPICE not aligned (%s) \n %s" % (raster_window, header_spice["DATE-OBS"][:19]))
                 cbar = fig.colorbar(im, label=header_spice["BUNIT"])
                 if results_folder is not None:
-                    fig.savefig(os.path.join(results_folder, "SPICE_before_alignement_on_grid.pdf"))
+                    fig.savefig(os.path.join(results_folder, "SPICE_before_alignment_on_grid.pdf"))
                 if show:
                     fig.show()
                 fig = plt.figure(figsize=(5, 5))
@@ -573,10 +572,10 @@ class PlotFunctions:
                 cbar = fig.colorbar(im, label=header_spice["BUNIT"], )
                 if results_folder is not None:
 
-                    fig.savefig(os.path.join(results_folder, "SPICE_after_alignement_on_grid.pdf"))
+                    fig.savefig(os.path.join(results_folder, "SPICE_after_alignment_on_grid.pdf"))
                 if show:
                     fig.show()
-                # fig.savefig(os.path.join(results_folder, "SPICE_after_alignement_on_grid.png"), dpi=150)
+                # fig.savefig(os.path.join(results_folder, "SPICE_after_alignment_on_grid.png"), dpi=150)
 
                 hdul_spice.close()
             hdul_large.close()
@@ -584,11 +583,11 @@ class PlotFunctions:
             with fits.open(spice_raster_path) as hdul_spice:
                 hdr_spice = hdul_spice[raster_window].header.copy()
                 hdul_spice[raster_window].header["CRVAL1"] = hdr_spice["CRVAL1"] + \
-                                                             u.Quantity(parameter_alignement['crval1'][max_index[0]],
+                                                             u.Quantity(parameter_alignment['crval1'][max_index[0]],
                                                                         "arcsec").to(
                                                                  hdul_spice[raster_window].header["CUNIT1"]).value
                 hdul_spice[raster_window].header["CRVAL2"] = hdr_spice["CRVAL2"] + \
-                                                             u.Quantity(parameter_alignement['crval2'][max_index[1]],
+                                                             u.Quantity(parameter_alignment['crval2'][max_index[1]],
                                                                         "arcsec").to(
                                                                  hdul_spice[raster_window].header["CUNIT2"]).value
                 hdr_spice_shifted = hdul_spice[raster_window].header.copy()

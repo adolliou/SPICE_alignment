@@ -7,7 +7,7 @@ import cv2
 import scipy.ndimage
 import astropy.io.fits as Fits
 from . import c_correlate
-from . import rectify
+from ..utils import rectify
 from astropy.wcs import WCS
 import astropy.units as u
 from ..plot import plot
@@ -16,13 +16,15 @@ from ..utils import Util
 from astropy.time import Time
 
 
-class Alignement:
+class Alignment:
 
     def __init__(self, large_fov_known_pointing: str, small_fov_to_correct: str, lag_crval1: np.array,
-                 lag_crval2: np.array, lag_cdelta1: object, lag_cdelta2: object, lag_crota: object, lag_solar_r: object = None,
+                 lag_crval2: np.array, lag_cdelta1: object, lag_cdelta2: object, lag_crota: object,
+                 lag_solar_r: object = None,
                  small_fov_value_min: object = None,
                  parallelism: object = False, use_tqdm: object = False,
-                 small_fov_value_max: object = None, counts_cpu_max: object = 40, large_fov_window: object = -1, small_fov_window: object = -1,
+                 small_fov_value_max: object = None, counts_cpu_max: object = 40, large_fov_window: object = -1,
+                 small_fov_window: object = -1,
                  path_save_figure: object = None, ) -> object:
         """
 
@@ -91,8 +93,9 @@ class Alignement:
             else:
                 hdr['CRVAL2'] = u.Quantity(self.crval2_ref, self.unit_lag).to(hdr["CUNIT2"]).value \
                                 + u.Quantity(kwargs["d_crval2"], self.unit_lag).to(hdr["CUNIT2"]).value
-        if 'd_cdelta' in kwargs.keys():
+        if 'd_cdelta1' in kwargs.keys():
             hdr['CDELT1'] = self.cdelta1_ref + kwargs["d_cdelta1"]
+        if 'd_cdelta2' in kwargs.keys():
             hdr['CDELT2'] = self.cdelta2_ref + kwargs["d_cdelta2"]
         if 'd_crota' in kwargs.keys():
             if 'CROTA' in hdr:
@@ -106,13 +109,14 @@ class Alignement:
                     crot = np.rad2deg(np.arccos(hdr["PC1_1"]))
                     hdr["CROTA"] = crot
                     # raise NotImplementedError
-            if ("PC1_1" in hdr) & (kwargs["d_crota"] != 0):
-                theta = u.Quantity(crot, "deg").to("radian").value
-                lam = hdr["CDELT2"] / hdr["CDELT1"]
-                hdr["PC1_1"] = np.cos(theta)
-                hdr["PC2_2"] = np.cos(theta)
-                hdr["PC1_2"] = -lam * np.sin(theta)
-                hdr["PC2_1"] = (1 / lam) * np.sin(theta)
+        if ((('d_cdelta1' in kwargs.keys()) or ('d_cdelta2' in kwargs.keys()) or ('d_crota' in kwargs.keys()))):
+
+            rho = np.arccos(hdr["PC1_1"])
+            lam = hdr["CDELT2"] / hdr["CDELT1"]
+            hdr["PC1_1"] = np.cos(rho)
+            hdr["PC2_2"] = np.cos(rho)
+            hdr["PC1_2"] = -lam * np.sin(rho)
+            hdr["PC2_1"] = (1 / lam) * np.sin(rho)
 
     def _iteration_step_along_crval2(self, d_crval1, d_cdelta1, d_cdelta2, d_crota, d_solar_r, method: str, ):
 
@@ -203,7 +207,6 @@ class Alignement:
         self.reference_date = None
         self.function_to_apply = self._interpolate_on_large_data_grid
 
-
         self.method = method
         self.coordinate_frame = "helioprojective"
         f_large = Fits.open(self.large_fov_known_pointing)
@@ -222,7 +225,6 @@ class Alignement:
         results = self._find_best_header_parameters()
 
         return results
-
 
     def _find_best_header_parameters(self):
 
@@ -280,10 +282,10 @@ class Alignement:
 
         elif "deg" in self.unit1:
             warnings.warn("Units of headers in deg: Modyfying inputs units to deg.")
-            self.lag_crval1 = Util.ang2pipi(u.Quantity(self.lag_crval1, "arcsec")).to("deg").value
-            self.lag_crval2 = Util.ang2pipi(u.Quantity(self.lag_crval2, "arcsec")).to("deg").value
-            self.lag_cdelta1 = Util.ang2pipi(u.Quantity(self.lag_cdelta1, "arcsec")).to("deg").value
-            self.lag_cdelta2 = Util.ang2pipi(u.Quantity(self.lag_cdelta2, "arcsec")).to("deg").value
+            self.lag_crval1 = Util.CommonUtil.ang2pipi(u.Quantity(self.lag_crval1, "arcsec")).to("deg").value
+            self.lag_crval2 = Util.CommonUtil.ang2pipi(u.Quantity(self.lag_crval2, "arcsec")).to("deg").value
+            self.lag_cdelta1 = Util.CommonUtil.ang2pipi(u.Quantity(self.lag_cdelta1, "arcsec")).to("deg").value
+            self.lag_cdelta2 = Util.CommonUtil.ang2pipi(u.Quantity(self.lag_cdelta2, "arcsec")).to("deg").value
             self.unit_lag = "deg"
         if self.lag_solar_r is None:
             self.lag_solar_r = np.array([1.004])
@@ -388,17 +390,19 @@ class Alignement:
 
         hdr_cut = self.hdr_small.copy()
 
-        longitude_cut, latitude_cut, dsun_obs_cut = Util.extract_EUI_coordinates(hdr_cut)
+        longitude_cut, latitude_cut, dsun_obs_cut = Util.EUIUtil.extract_EUI_coordinates(hdr_cut)
         w_xy_large = WCS(self.hdr_large.copy())
         x_cut, y_cut = w_xy_large.world_to_pixel(longitude_cut, latitude_cut)
-        image_large_cut = Util.CommonUtil.interpol2d(np.array(data_large, dtype=np.float64), x=x_cut, y=y_cut, order=1, fill=-32768)
+        image_large_cut = Util.CommonUtil.interpol2d(np.array(data_large, dtype=np.float64), x=x_cut, y=y_cut, order=1,
+                                                     fill=-32768)
         image_large_cut[image_large_cut == -32768] = np.nan
         self.hdr_large = hdr_cut.copy()
 
         w_xy_small = WCS(self.hdr_small.copy())
         x_cut, y_cut = w_xy_small.world_to_pixel(longitude_cut, latitude_cut)
-        image_small_cut = Util.CommonUtil.interpol2d(np.array(self.data_small.copy(), dtype=np.float64), x=x_cut, y=y_cut,
-                                     order=1, fill=-32768)
+        image_small_cut = Util.CommonUtil.interpol2d(np.array(self.data_small.copy(), dtype=np.float64), x=x_cut,
+                                                     y=y_cut,
+                                                     order=1, fill=-32768)
         image_small_cut[image_small_cut == -32768] = np.nan
 
         self.data_small = image_small_cut
@@ -421,11 +425,11 @@ class Alignement:
     def _interpolate_on_large_data_grid(self, d_solar_r, data, hdr):
 
         w_xy_small = WCS(hdr)
-        longitude_large, latitude_large, dsun_obs_large = Util.extract_EUI_coordinates(self.hdr_large)
+        longitude_large, latitude_large, dsun_obs_large = Util.EUIUtil.extract_EUI_coordinates(self.hdr_large)
         x_large, y_large = w_xy_small.world_to_pixel(longitude_large, latitude_large)
-        image_small_shft = Util.CommonUtil.interpol2d(np.array(data, dtype=np.float64), x=x_large, y=y_large, order=1, fill=-32768)
+        image_small_shft = Util.CommonUtil.interpol2d(np.array(data, dtype=np.float64), x=x_large, y=y_large, order=1,
+                                                      fill=-32768)
         image_small_shft = np.where(image_small_shft == -32768, np.nan, image_small_shft)
-
 
         return image_small_shft
 
@@ -438,25 +442,3 @@ class Alignement:
             naxis1 = hdr["NAXIS1"]
             naxis2 = hdr["NAXIS2"]
         return naxis1, naxis2
-
-
-class Util:
-    @staticmethod
-    def ang2pipi(ang):
-        """ put angle between ]-180, +180] deg """
-        pi = u.Quantity(180, 'deg')
-        return - ((- ang + pi) % (2 * pi) - pi)
-
-    @staticmethod
-    def extract_EUI_coordinates(hdr):
-        w = WCS(hdr)
-        idx_lon = np.where(np.array(w.wcs.ctype, dtype="str") == "HPLN-TAN")[0][0]
-        idx_lat = np.where(np.array(w.wcs.ctype, dtype="str") == "HPLT-TAN")[0][0]
-        x, y = np.meshgrid(np.arange(w.pixel_shape[idx_lon]), np.arange(w.pixel_shape[idx_lat]), )  # t dépend de x,
-        # should reproject on a new coordinate grid first : suppose slits at the same time :
-        longitude, latitude = w.pixel_to_world(x, y)
-        if "DSUN_OBS" in w.to_header():
-            dsun_obs_large = w.to_header()["DSUN_OBS"]
-        else:
-            dsun_obs_large = None
-        return Util.ang2pipi(longitude), Util.ang2pipi(latitude), dsun_obs_large
