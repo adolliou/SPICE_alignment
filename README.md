@@ -1,4 +1,4 @@
-# Alignement
+# SPICE_Alignement
 
 ## description :
 
@@ -15,7 +15,7 @@ The code also allows to create synthetic rasters of SPICE or EIS image, using a 
 either use pip install + git in your virtual environment :
 
 ```shell
-pip install git+https://github.com/adolliou/Alignement
+pip install git+https://github.com/adolliou/SPICE_Alignement
 ```
 to create a virtual environement do in your local python folder :
 ```shell
