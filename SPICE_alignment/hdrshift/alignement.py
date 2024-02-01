@@ -22,7 +22,7 @@ class Alignment:
                  lag_solar_r: object = None,
                  small_fov_value_min: object = None,
                  parallelism: object = False, use_tqdm: object = False,
-                 small_fov_value_max: object = None, counts_cpu_max: object = 40, large_fov_window: object = -1,
+                 small_fov_value_max: object = None, counts_cpu_max: int = 40, large_fov_window: object = -1,
                  small_fov_window: object = -1,
                  path_save_figure: object = None, ) -> object:
         """
@@ -354,12 +354,15 @@ class Alignment:
                                 }
 
                                 Processes.append(Process(target=self._iteration_step_along_crval2, kwargs=kwargs))
-
-                for bb in range(len(Processes)):
-                    Processes[bb].start()
+                len_processes = np.arange(len(Processes))
+                len_processes_split = np.array_split(len_processes, self.counts)
+                for sublist in len_processes_split:
+                    if len(sublist) > 0:
+                        for index_processes in sublist:
+                            Processes[index_processes].start()
                 #
-                for bb in range(len(Processes)):
-                    Processes[bb].join()
+                        for index_processes in sublist:
+                            Processes[index_processes].join()
                 # pool = mp.Pool(count)
                 # results[:, :, ii, ll, jj, kk] = pool.map(partial(self._iteration_step_along_crval2,
                 #                                                  d_cdelta1=d_cdelta1,
