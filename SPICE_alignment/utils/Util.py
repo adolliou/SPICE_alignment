@@ -352,6 +352,8 @@ class SpiceUtil:
             if lag_crota is not None:
                 if key_rota is None:
                     hdr_shifted["CROTA"] = np.arccos(hdul[window_spice].header["PC1_1"])
+                    key_rota = "CROTA"
+
                 hdr_shifted[key_rota] += lag_crota[max_index[4]]
                 change_pcij = True
 
