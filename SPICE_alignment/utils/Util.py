@@ -323,7 +323,7 @@ class SpiceUtil:
             return data_l3
 
     @staticmethod
-    def write_corrected_fits(path_spice_l2_input: str, window_spice, path_spice_l2_output: str, corr: np.array,
+    def write_corrected_fits(path_spice_l2_input: str, window_spice_list, path_spice_l2_output: str, corr: np.array,
                              lag_crval1=None, lag_crval2=None, lag_crota=None,
                              lag_cdelta1=None, lag_cdelta2=None,
                              ):
@@ -331,50 +331,51 @@ class SpiceUtil:
         max_index = np.unravel_index(np.nanargmax(corr), corr.shape)
 
         with fits.open(path_spice_l2_input) as hdul:
-            hdu = hdul[window_spice]
-            hdr_shifted = hdu.header
-            SpiceUtil.recenter_crpix_in_header_L2(hdr_shifted)
-            change_pcij = False
-            if lag_crval1 is not None:
-                hdul[window_spice].header['CRVAL1'] = hdr_shifted['CRVAL1'] + u.Quantity(lag_crval1[max_index[0]],
-                                                                                         "arcsec").to(
-                    hdr_shifted['CUNIT1']).value
-            if lag_crval2 is not None:
-                hdul[window_spice].header['CRVAL2'] = hdr_shifted['CRVAL2'] + u.Quantity(lag_crval2[max_index[1]],
-                                                                                         "arcsec").to(
-                    hdr_shifted['CUNIT2']).value
-            key_rota = None
-            if "CROTA" in hdr_shifted:
-                key_rota = "CROTA"
-            elif "CROTA2" in hdr_shifted:
-                key_rota = "CROTA2"
-
-            if lag_crota is not None:
-                if key_rota is None:
-                    hdr_shifted["CROTA"] = np.arccos(hdul[window_spice].header["PC1_1"])
+            for window_spice in window_spice_list:
+                hdu = hdul[window_spice]
+                hdr_shifted = hdu.header
+                SpiceUtil.recenter_crpix_in_header_L2(hdr_shifted)
+                change_pcij = False
+                if lag_crval1 is not None:
+                    hdul[window_spice].header['CRVAL1'] = hdr_shifted['CRVAL1'] + u.Quantity(lag_crval1[max_index[0]],
+                                                                                             "arcsec").to(
+                        hdr_shifted['CUNIT1']).value
+                if lag_crval2 is not None:
+                    hdul[window_spice].header['CRVAL2'] = hdr_shifted['CRVAL2'] + u.Quantity(lag_crval2[max_index[1]],
+                                                                                             "arcsec").to(
+                        hdr_shifted['CUNIT2']).value
+                key_rota = None
+                if "CROTA" in hdr_shifted:
                     key_rota = "CROTA"
+                elif "CROTA2" in hdr_shifted:
+                    key_rota = "CROTA2"
 
-                hdr_shifted[key_rota] += lag_crota[max_index[4]]
-                change_pcij = True
+                if lag_crota is not None:
+                    if key_rota is None:
+                        hdr_shifted["CROTA"] = np.arccos(hdul[window_spice].header["PC1_1"])
+                        key_rota = "CROTA"
 
-            if lag_cdelta1 is not None:
-                hdul[window_spice].header['CDELT1'] = hdr_shifted['CDELT1'] + u.Quantity(lag_crval2[max_index[2]],
-                                                                                         "arcsec").to(
-                    hdr_shifted['CUNIT1']).value
-                change_pcij = True
+                    hdr_shifted[key_rota] += lag_crota[max_index[4]]
+                    change_pcij = True
 
-            if lag_cdelta2 is not None:
-                hdul[window_spice].header['CDELT2'] = hdr_shifted['CDELT2'] + u.Quantity(lag_crval2[max_index[3]],
-                                                                                         "arcsec").to(
-                    hdr_shifted['CUNIT2']).value
-                change_pcij = True
-            if change_pcij:
-                theta = u.Quantity(hdr_shifted[key_rota], "deg").to("radian").value
-                lam = hdr_shifted["CDELT2"] / hdr_shifted["CDELT1"]
-                hdul[window_spice].header["PC1_1"] = np.cos(theta)
-                hdul[window_spice].header["PC2_2"] = np.cos(theta)
-                hdul[window_spice].header["PC1_2"] = -lam * np.sin(theta)
-                hdul[window_spice].header["PC2_1"] = (1 / lam) * np.sin(theta)
+                if lag_cdelta1 is not None:
+                    hdul[window_spice].header['CDELT1'] = hdr_shifted['CDELT1'] + u.Quantity(lag_crval2[max_index[2]],
+                                                                                             "arcsec").to(
+                        hdr_shifted['CUNIT1']).value
+                    change_pcij = True
+
+                if lag_cdelta2 is not None:
+                    hdul[window_spice].header['CDELT2'] = hdr_shifted['CDELT2'] + u.Quantity(lag_crval2[max_index[3]],
+                                                                                             "arcsec").to(
+                        hdr_shifted['CUNIT2']).value
+                    change_pcij = True
+                if change_pcij:
+                    theta = u.Quantity(hdr_shifted[key_rota], "deg").to("radian").value
+                    lam = hdr_shifted["CDELT2"] / hdr_shifted["CDELT1"]
+                    hdul[window_spice].header["PC1_1"] = np.cos(theta)
+                    hdul[window_spice].header["PC2_2"] = np.cos(theta)
+                    hdul[window_spice].header["PC1_2"] = -lam * np.sin(theta)
+                    hdul[window_spice].header["PC2_1"] = (1 / lam) * np.sin(theta)
 
             hdul.writeto(path_spice_l2_output, overwrite=True)
             hdul.close()
