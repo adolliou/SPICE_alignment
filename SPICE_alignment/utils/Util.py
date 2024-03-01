@@ -352,11 +352,13 @@ class SpiceUtil:
 
                 if lag_crota is not None:
                     if key_rota is None:
-                        hdr_shifted["CROTA"] = np.arccos(hdul[window_spice].header["PC1_1"])
+                        hdr_shifted["CROTA"] = u.Quantity(np.arccos(hdul[window_spice].header["PC1_1"]),
+                                                          "radian").to("deg").value
                         key_rota = "CROTA"
-
                     hdr_shifted[key_rota] += lag_crota[max_index[4]]
                     change_pcij = True
+
+
 
                 if lag_cdelta1 is not None:
                     hdul[window_spice].header['CDELT1'] = hdr_shifted['CDELT1'] + u.Quantity(lag_crval2[max_index[2]],
