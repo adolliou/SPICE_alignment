@@ -701,8 +701,14 @@ class PlotFits:
     @staticmethod
     def build_regular_grid(longitude, latitude, lonlims=None, latlims=None):
         # breakpoint()
-        dlon = np.abs((longitude[0, 1] - longitude[0, 0]).to("deg").value)
-        dlat = np.abs((latitude[1, 0] - latitude[0, 0]).to("deg").value)
+        x = np.abs((longitude[0, 1] - longitude[0, 0]).to("deg").value)
+        y = np.abs((latitude[0, 1] - latitude[0, 0]).to("deg").value)
+        dlon = np.sqrt(x ** 2 + y ** 2)
+
+        x = np.abs((longitude[1, 0] - longitude[0, 0]).to("deg").value)
+        y = np.abs((latitude[1, 0] - latitude[0, 0]).to("deg").value)
+        dlat = np.sqrt(x ** 2 + y ** 2)
+
         longitude1D = np.arange(np.min(AlignCommonUtil.ang2pipi(longitude).to(u.deg).value),
                                 np.max(AlignCommonUtil.ang2pipi(longitude).to(u.deg).value), dlon)
         latitude1D = np.arange(np.min(AlignCommonUtil.ang2pipi(latitude).to(u.deg).value),
