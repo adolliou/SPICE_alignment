@@ -6,7 +6,7 @@ import astropy.units as u
 from ..utils import Util
 
 
-class AlignementSpicePixel(AlignmentPixels):
+class AlignmentSpicePixel(AlignmentPixels):
     def __init__(self, fsi_path: str, fsi_window: int, spice_path: str, spice_window: int, index_amplitude=None,):
         super().__init__(fsi_path, fsi_window, spice_path, spice_window)
         self.fsi_path = fsi_path
