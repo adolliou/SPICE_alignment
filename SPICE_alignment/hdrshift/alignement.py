@@ -19,6 +19,8 @@ def divide_chunks(l, n):
     # looping till length l
     for i in range(0, len(l), n):
         yield l[i:i + n]
+
+
 class Alignment:
 
     def __init__(self, large_fov_known_pointing: str, small_fov_to_correct: str, lag_crval1: np.array,
@@ -119,7 +121,7 @@ class Alignment:
                     crot = np.rad2deg(np.arccos(hdr["PC1_1"]))
                     hdr["CROTA"] = crot
             crot = self.crota_ref + kwargs["d_crota"]
-                    # raise NotImplementedError
+            # raise NotImplementedError
         if ((('d_cdelta1' in kwargs.keys()) or ('d_cdelta2' in kwargs.keys()) or ('d_crota' in kwargs.keys()))):
             rho = np.deg2rad(crot)
             lam = hdr["CDELT2"] / hdr["CDELT1"]
@@ -147,7 +149,7 @@ class Alignment:
         # if lock is not None:
         lock.acquire()
         shmm_correlation, data_correlation = Util.MpUtils.gen_shmm(create=False, **self._correlation)
-        data_correlation[position[0], :, position[1], position[2], position[3],  position[4]] = results
+        data_correlation[position[0], :, position[1], position[2], position[3], position[4]] = results
         # print(f'{data_correlation[:, :, position[1], position[2], position[3],  position[4]]}')
 
         lock.release()
@@ -196,11 +198,9 @@ class Alignment:
         else:
             raise NotImplementedError
 
-    def align_using_carrington(self, lonlims: list, latlims: list, shape: tuple, reference_date, method='correlation'):
+    def align_using_carrington(self, lonlims=None, latlims=None, shape=None, size_deg_carrington=None,
+                               reference_date=None, method='correlation'):
 
-        self.lonlims = lonlims
-        self.latlims = latlims
-        self.shape = shape
         self.reference_date = reference_date
         self.function_to_apply = self._carrington_transform
         self.method = method
@@ -216,6 +216,23 @@ class Alignment:
         self.hdr_small = f_small[self.small_fov_window].header.copy()
         self._recenter_crpix_in_header(self.hdr_small)
         self.data_small = np.array(f_small[self.small_fov_window].data.copy(), dtype=np.float64)
+
+        if (lonlims is None) and (latlims is None) & (shape is None) & (size_deg_carrington is not None):
+
+            CRLN_OBS = f_small[self.small_fov_window].header["CRLN_OBS"]
+            CRLT_OBS = f_small[self.small_fov_window].header["CRLT_OBS"]
+
+            self.lonlims = [CRLN_OBS - 0.5 * size_deg_carrington[0], CRLN_OBS + 0.5 * size_deg_carrington[0]]
+            self.latlims = [CRLT_OBS - 0.5 * size_deg_carrington[1], CRLT_OBS + 0.5 * size_deg_carrington[1]]
+
+
+        elif (lonlims is not None) and (latlims is not None) & (shape is not None):
+
+            self.lonlims = lonlims
+            self.latlims = latlims
+            self.shape = shape
+        else:
+            raise ValueError("either set lonlims as None, or not. no in between.")
 
         f_large.close()
         f_small.close()
@@ -346,7 +363,7 @@ class Alignment:
                         for jj, d_crota in enumerate(self.lag_crota):
                             for ff, d_crval1 in enumerate(self.lag_crval1):
                                 kwargs = {
-                                    "d_crval1":  d_crval1,
+                                    "d_crval1": d_crval1,
                                     "d_cdelta1": d_cdelta1,
                                     "d_cdelta2": d_cdelta2,
                                     "d_crota": d_crota,
@@ -359,7 +376,7 @@ class Alignment:
 
                                 Processes.append(Process(target=self._iteration_step_along_crval2, kwargs=kwargs))
                 len_processes = np.arange(len(Processes))
-                start_index = np.arange(0, len(Processes),  self.counts)
+                start_index = np.arange(0, len(Processes), self.counts)
 
                 len_processes_split = divide_chunks(l=len_processes, n=self.counts)
                 # len_processes_split = np.array_split(len_processes, self.counts)
@@ -368,7 +385,7 @@ class Alignment:
                     if len(sublist) > 0:
                         for index_processes in sublist:
                             Processes[index_processes].start()
-                #
+                        #
                         for ff, index_processes in enumerate(sublist):
                             print(f'Start process #{ff}')
                             Processes[index_processes].join()
@@ -469,16 +486,17 @@ class Alignment:
         longitude_cut, latitude_cut, dsun_obs_cut = Util.AlignEUIUtil.extract_EUI_coordinates(hdr_cut)
         w_xy_large = WCS(self.hdr_large.copy())
         x_cut, y_cut = w_xy_large.world_to_pixel(longitude_cut, latitude_cut)
-        image_large_cut = Util.AlignCommonUtil.interpol2d(np.array(data_large, dtype=np.float64), x=x_cut, y=y_cut, order=1,
-                                                     fill=-32768)
+        image_large_cut = Util.AlignCommonUtil.interpol2d(np.array(data_large, dtype=np.float64), x=x_cut, y=y_cut,
+                                                          order=1,
+                                                          fill=-32768)
         image_large_cut[image_large_cut == -32768] = np.nan
         self.hdr_large = hdr_cut.copy()
 
         w_xy_small = WCS(self.hdr_small.copy())
         x_cut, y_cut = w_xy_small.world_to_pixel(longitude_cut, latitude_cut)
         image_small_cut = Util.AlignCommonUtil.interpol2d(np.array(self.data_small.copy(), dtype=np.float64), x=x_cut,
-                                                     y=y_cut,
-                                                     order=1, fill=-32768)
+                                                          y=y_cut,
+                                                          order=1, fill=-32768)
         image_small_cut[image_small_cut == -32768] = np.nan
 
         self.data_small = image_small_cut
@@ -504,8 +522,8 @@ class Alignment:
         longitude_large, latitude_large, dsun_obs_large = Util.AlignEUIUtil.extract_EUI_coordinates(self.hdr_large)
         x_large, y_large = w_xy_small.world_to_pixel(longitude_large, latitude_large)
         image_small_shft = Util.AlignCommonUtil.interpol2d(np.array(copy.deepcopy(data), dtype=np.float64),
-                                                      x=x_large, y=y_large, order=1,
-                                                      fill=-32768)
+                                                           x=x_large, y=y_large, order=1,
+                                                           fill=-32768)
         image_small_shft = np.where(image_small_shft == -32768, np.nan, image_small_shft)
 
         return image_small_shft

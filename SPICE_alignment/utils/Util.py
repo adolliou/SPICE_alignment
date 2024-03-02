@@ -728,8 +728,14 @@ class PlotFits:
 
     @staticmethod
     def extend_regular_grid(longitude_grid, latitude_grid, delta_longitude, delta_latitude):
-        dlon = np.abs((longitude_grid[1, 1] - longitude_grid[0, 0]).to("deg").value)
-        dlat = np.abs((latitude_grid[1, 1] - latitude_grid[0, 0]).to("deg").value)
+        x = np.abs((longitude_grid[0, 1] - longitude_grid[0, 0]).to("deg").value)
+        y = np.abs((latitude_grid[0, 1] - latitude_grid[0, 0]).to("deg").value)
+        dlon = np.sqrt(x ** 2 + y ** 2)
+
+        x = np.abs((longitude_grid[1, 0] - longitude_grid[0, 0]).to("deg").value)
+        y = np.abs((latitude_grid[1, 0] - latitude_grid[0, 0]).to("deg").value)
+        dlat = np.sqrt(x ** 2 + y ** 2)
+
         delta_longitude_deg = AlignCommonUtil.ang2pipi(delta_longitude).to("deg").value
         delta_latitude_deg = AlignCommonUtil.ang2pipi(delta_latitude).to("deg").value
 
