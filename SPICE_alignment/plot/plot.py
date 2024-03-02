@@ -1,3 +1,4 @@
+import copy
 from matplotlib import pyplot as plt
 import numpy as np
 from astropy.wcs import WCS
@@ -8,7 +9,7 @@ import matplotlib.patches as patches
 import cv2
 import scipy
 from astropy.io import fits
-from ..utils.Util import SpiceUtil, EUIUtil, PlotFits, CommonUtil
+from utils.Util import SpiceUtil, EUIUtil, PlotFits, CommonUtil
 from astropy.time import Time
 import os
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -81,14 +82,15 @@ class PlotFunctions:
     @staticmethod
     def plot_correlation(corr, lag_dx, lag_dy, lag_drot=None, path_save=None, fig=None, ax=None, show=False,
                          lag_dx_label=None, lag_dy_label=None, unit='\'\'', type_plot="xy", ):
+
+        max_index = np.unravel_index(np.nanargmax(corr), corr.shape)
+
         if type_plot == "xy":
             lag_dx_label = 'CRVAL1 [arcsec]'
             lag_dy_label = 'CRVAL2 [arcsec]'
-            print(corr.shape)
-            corr = corr[:, :, 0, 0, 0, 0]
+            corr = corr[:, :, max_index[2], max_index[3], max_index[4], max_index[5]]
         else:
             raise NotImplementedError
-        max_index = np.unravel_index(np.nanargmax(corr), corr.shape)
 
         if fig is None:
             fig = plt.figure()
@@ -115,7 +117,7 @@ class PlotFunctions:
             textstr = '\n'.join((
                 r'$dx=%.1f$ %s' % (lag_dx[max_index[0]], unit),
                 r'$dy=%.1f$ %s' % (lag_dy[max_index[1]], unit),
-                r'$crota=%.2f$ $^\circ$' % (lag_drot[max_index[2]])))
+                r'$drota=%.2f$ $^\circ$' % (lag_drot[max_index[4]])))
         else:
             textstr = '\n'.join((
                 r'$\delta CRVAL1=%.2f$ %s' % (lag_dx[max_index[0]], unit),
@@ -258,10 +260,11 @@ class PlotFunctions:
         im = ax.imshow(image_main_cut, origin="lower", interpolation="none", norm=norm, cmap=cmap, aspect=aspect,
                        extent=[longitude_grid_arc[0, 0] - 0.5 * dlon, longitude_grid_arc[-1, -1] + 0.5 * dlon,
                                latitude_grid_arc[0, 0] - 0.5 * dlat, latitude_grid_arc[-1, -1] + 0.5 * dlat])
+
         if levels is None:
             max_small = np.nanmax(image_contour_cut)
             levels = [0.5 * max_small]
-
+        print(f'{levels=}')
         ax.contour(image_contour_cut, levels=levels, origin='lower', linewidths=0.5, colors='w', aspect=aspect,
                    extent=[longitude_grid_arc[0, 0] - 0.5 * dlon, longitude_grid_arc[-1, -1] + 0.5 * dlon,
                            latitude_grid_arc[0, 0] - 0.5 * dlat, latitude_grid_arc[-1, -1] + 0.5 * dlat])
@@ -307,7 +310,6 @@ class PlotFunctions:
         ax_cbar2 = fig.add_axes(
             [ax3.get_position().x1 + 0.013, ax3.get_position().y0 + 0.15 * ax3.get_position().height,
              0.01, ax3.get_position().height * 0.7])
-
         im = PlotFunctions.contour_plot(hdr_main=hdr_main, data_main=data_main, plot_colorbar=False, aspect=aspect,
                                         hdr_contour=hdr_contour_1, data_contour=data_contour_1, cmap=cmap1,
                                         path_save=None, show=False, levels=levels, fig=fig, ax=ax1, norm=norm)
@@ -379,15 +381,15 @@ class PlotFunctions:
         return longitude_grid, latitude_grid
 
     @staticmethod
-    def plot_spice_co_alignment(imager_window, large_fov_fits_path, corr,
-                           raster_window, spice_raster_path, levels_percentile=[0.8, 0.9],
-                           lag_crval1=None, lag_crval2=None, larg_crota=None, lag_cdelt1=None, lag_cdelt2=None,
-                                 show=False, results_folder=None,):
+    def plot_co_alignment(large_fov_window, large_fov_path, corr,
+                          small_fov_window, small_fov_path, levels_percentile=[0.8],
+                          lag_crval1=None, lag_crval2=None, lag_crota=None, lag_cdelt1=None, lag_cdelt2=None,
+                          show=False, results_folder=None, ):
 
         parameter_alignment = {
             "crval1": lag_crval1,
             "crval2": lag_crval2,
-            "crota": larg_crota,
+            "crota": lag_crota,
             "cdelt1": lag_cdelt1,
             "cdelt2": lag_cdelt2,
 
@@ -395,34 +397,40 @@ class PlotFunctions:
 
         max_index = np.unravel_index(np.nanargmax(corr), corr.shape)
 
-        with fits.open(large_fov_fits_path) as hdul_large:
-            header_large = hdul_large[imager_window].header.copy()
-            data_large = hdul_large[imager_window].data.copy()
-            with fits.open(spice_raster_path) as hdul_spice:
-                hdu_spice = hdul_spice[0]
+        with fits.open(large_fov_path) as hdul_large:
+            header_large = hdul_large[large_fov_window].header.copy()
+            data_large = hdul_large[large_fov_window].data.copy()
+            with fits.open(small_fov_path) as hdul_spice:
+                header_spice = hdul_spice[small_fov_window].header.copy()
 
-                header_spice = hdul_spice[raster_window].header.copy()
-                SpiceUtil.recenter_crpix_in_header_L2(header_spice)
-                w_spice = WCS(header_spice)
-                ymin, ymax = SpiceUtil.vertical_edges_limits(header_spice)
+                if "HRI_EUV" in  header_spice["TELESCOP"]:
+                    EUIUtil.recenter_crpix_in_header(header_spice)
+                    w_xy = WCS(header_spice)
+                    header_spice = w_xy.to_header().copy()
+                    data_spice = np.array(hdul_spice[small_fov_window].data.copy(), dtype=np.float64)
+                elif  "SPICE" in header_spice["TELESCOP"]:
+                    SpiceUtil.recenter_crpix_in_header_L2(header_spice)
+                    w_spice = WCS(header_spice)
+                    ymin, ymax = SpiceUtil.vertical_edges_limits(header_spice)
+                    w_xyt = w_spice.dropaxis(2)
+                    w_xyt.wcs.pc[2, 0] = 0
+                    w_xy = w_xyt.dropaxis(2)
+                    header_spice = w_xy.to_header().copy()
 
-                w_xyt = w_spice.dropaxis(2)
-                w_xyt.wcs.pc[2, 0] = 0
-                w_xy = w_xyt.dropaxis(2)
-                header_spice = w_xy.to_header().copy()
-                data_small = np.array(hdul_spice[raster_window].data.copy(), dtype=np.float64)
-                print(data_small.shape)
-                ylen = data_small.shape[2]
-                ylim = np.array([ymin, ylen - ymax - 1]).max()
-                data_spice = np.nansum(data_small[0, :, ylim:(ylen - ylim), :], axis=0)
-                header_spice["CRPIX1"] = (data_spice.shape[1] + 1) / 2
-                header_spice["CRPIX2"] = (data_spice.shape[0] + 1) / 2
-                header_spice["SOLAR_B0"] = hdul_spice[raster_window].header["SOLAR_B0"]
-                header_spice["RSUN_REF"] = hdul_spice[raster_window].header["RSUN_REF"]
-                header_spice["DSUN_OBS"] = hdul_spice[raster_window].header["DSUN_OBS"]
+                    data_small = np.array(hdul_spice[small_fov_window].data.copy(), dtype=np.float64)
+                    ylen = data_small.shape[2]
+                    ylim = np.array([ymin, ylen - ymax - 1]).max()
+                    data_spice = np.nansum(data_small[0, :, ylim:(ylen - ylim), :], axis=0)
+                    header_spice["CRPIX1"] = (data_spice.shape[1] + 1) / 2
+                    header_spice["CRPIX2"] = (data_spice.shape[0] + 1) / 2
+
+
+
+
+                header_spice["SOLAR_B0"] = hdul_spice[small_fov_window].header["SOLAR_B0"]
+                header_spice["RSUN_REF"] = hdul_spice[small_fov_window].header["RSUN_REF"]
+                header_spice["DSUN_OBS"] = hdul_spice[small_fov_window].header["DSUN_OBS"]
                 # data_spice = np.nansum(hdul_spice[raster_window].data.copy()[0, :, :, :], axis=0)
-
-
 
                 header_spice["NAXIS1"] = data_spice.shape[1]
                 header_spice["NAXIS2"] = data_spice.shape[0]
@@ -433,27 +441,43 @@ class PlotFunctions:
                 hdr_spice_shifted = header_spice.copy()
                 hdr_spice_shifted["CRVAL1"] = hdr_spice_shifted["CRVAL1"] \
                                               + u.Quantity(parameter_alignment['crval1'][max_index[0]], "arcsec").to(
-                    "deg").value
+                    hdr_spice_shifted["CUNIT1"]).value
                 hdr_spice_shifted["CRVAL2"] = hdr_spice_shifted["CRVAL2"] \
                                               + u.Quantity(parameter_alignment['crval2'][max_index[1]], "arcsec").to(
-                    "deg").value
+                    hdr_spice_shifted["CUNIT2"]).value
                 change_pcij = False
+
+                key_rota = None
+                if "CROTA" in hdr_spice_shifted:
+                    key_rota = "CROTA"
+                elif "CROTA2" in hdr_spice_shifted:
+                    key_rota = "CROTA2"
+                crota = np.rad2deg(np.arccos(copy.deepcopy(hdr_spice_shifted["PC1_1"])))
+
                 if parameter_alignment['crota'] is not None:
-                    hdr_spice_shifted["CROTA"] = hdul_spice[raster_window].header["CROTA"] + \
-                                                 parameter_alignment['crota'][max_index[4]]
+                    # hdr_spice_shifted["CROTA"] = hdul_spice[raster_window].header["CROTA"] +\
+                    #                              parameter_alignement['crota'][max_index[4]]
+                    if key_rota is None:
+                        hdr_spice_shifted["CROTA"] = np.rad2deg(np.arccos(copy.deepcopy(hdr_spice_shifted["PC1_1"])))
+
+                        key_rota = "CROTA"
+                    hdr_spice_shifted[key_rota] += parameter_alignment['crota'][max_index[4]]
+                    crota += parameter_alignment['crota'][max_index[4]]
                     change_pcij = True
 
                 if parameter_alignment['cdelt1'] is not None:
-                    hdr_spice_shifted["CDELT1"] = hdul_spice[raster_window].header["CDELT1"] + \
-                                                  parameter_alignment['cdelt1'][max_index[2]]
+                    cdelt1 = u.Quantity(hdr_spice_shifted["CDELT1"], hdr_spice_shifted["CUNIT1"]) + \
+                                                  u.Quantity(parameter_alignment['cdelt1'][max_index[2]], "arcsec")
+                    hdr_spice_shifted["CDELT1"] = cdelt1.to(hdr_spice_shifted["CUNIT1"]).value
                     change_pcij = True
 
                 if parameter_alignment['cdelt2'] is not None:
-                    hdr_spice_shifted["CDELT2"] = hdul_spice[raster_window].header["CDELT2"] + \
-                                                  parameter_alignment['cdelt2'][max_index[3]]
+                    cdelt2 = u.Quantity(hdr_spice_shifted["CDELT2"], hdr_spice_shifted["CUNIT2"]) + \
+                             u.Quantity(parameter_alignment['cdelt2'][max_index[3]], "arcsec")
+                    hdr_spice_shifted["CDELT2"] = cdelt2.to(hdr_spice_shifted["CUNIT2"]).value
                     change_pcij = True
                 if change_pcij:
-                    theta = u.Quantity(hdr_spice_shifted["CROTA"], "deg").to("radian").value
+                    theta = np.deg2rad(crota)
                     lam = hdr_spice_shifted["CDELT2"] / hdr_spice_shifted["CDELT1"]
                     hdr_spice_shifted["PC1_1"] = np.cos(theta)
                     hdr_spice_shifted["PC2_2"] = np.cos(theta)
@@ -466,13 +490,12 @@ class PlotFunctions:
 
                 longitude, latitude = EUIUtil.extract_EUI_coordinates(header_spice, dsun=False)
                 longitude_grid, latitude_grid = PlotFits.build_regular_grid(longitude, latitude)
-                data_fsi = hdul_large[imager_window].data
-                header_fsi = hdul_large[imager_window].header
-                time_slit = hdul_spice[raster_window].header["PC4_1"]
+                data_fsi = hdul_large[small_fov_window].data
+                header_fsi = hdul_large[small_fov_window].header
 
-                header_spice["BUNIT"] = hdul_spice[raster_window].header["BUNIT"]
-                hdr_spice_shifted["BUNIT"] = hdul_spice[raster_window].header["BUNIT"]
-                header_spice["DATE-AVG"] = hdul_spice[raster_window].header["DATE-AVG"]
+                header_spice["BUNIT"] = hdul_spice[small_fov_window].header["BUNIT"]
+                hdr_spice_shifted["BUNIT"] = hdul_spice[small_fov_window].header["BUNIT"]
+                header_spice["DATE-AVG"] = hdul_spice[small_fov_window].header["DATE-AVG"]
 
                 fig = plt.figure(figsize=(10, 4))
                 fig, ax1, ax2, ax3, ax_cbar1, ax_cbar2 = \
@@ -483,17 +506,17 @@ class PlotFunctions:
                 detector = header_large["DETECTOR"]
                 wave = header_large["WAVELNTH"]
 
-                ax1.set_title(f"{detector} {wave} & SPICE (contour) not aligned ")
-                ax2.set_title(f"{detector} {wave} & SPICE (contour) aligned ")
-                ax3.set_title("SPICE (%s) aligned " % raster_window)
+                ax1.set_title(f"{detector} {wave} & Small FOV (contour) not aligned ")
+                ax2.set_title(f"{detector} {wave} & Small FOV (contour) aligned ")
+                ax3.set_title("Small FOV (%s) aligned " % small_fov_window)
                 date = header_spice["DATE-OBS"][:19]
-                fig.suptitle(f"SPICE raster {date} aligned with {detector} {wave} synthetic raster")
+                fig.suptitle(f"Small FOV {date} aligned with {detector} {wave}")
                 # fig.suptitle("Alignement of SPICE  using a synthetic raster of HRIEUV images")
                 if results_folder is not None:
-                    fig.savefig('%s/compare_SPICE_SR_alignment.pdf' % (results_folder))
+                    fig.savefig('%s/compare_alignment.pdf' % (results_folder))
                 if show:
                     fig.show()
-                date = Time(hdul_spice[raster_window].header["DATE-AVG"]).fits[:19]
+                date = Time(hdul_spice[small_fov_window].header["DATE-AVG"]).fits[:19]
                 # fig.suptitle(f"Alignement SPICE {date}- HRI 174")
                 w_fsi = WCS(header_fsi)
                 w_spice = WCS(header_spice)
@@ -533,7 +556,7 @@ class PlotFunctions:
                                        longitude_grid_arc[-1, -1] + 0.5 * dlon,
                                        latitude_grid_arc[0, 0] - 0.5 * dlat,
                                        latitude_grid_arc[-1, -1] + 0.5 * dlat])
-                ax.set_title("Synthetic raster of %s %s files \n %s" % (header_large["DATE-AVG"][:19],
+                ax.set_title(f"{detector} {wave} of %s %s files \n %s" % (header_large["DATE-AVG"][:19],
                                                                         detector, wave))
                 ax.set_xlabel("Solar-X [arcsec]")
                 ax.set_ylabel("Solar-Y [arcsec]")
@@ -552,10 +575,10 @@ class PlotFunctions:
 
                 ax.set_xlabel("Solar-X [arcsec]")
                 ax.set_ylabel("Solar-Y [arcsec]")
-                ax.set_title("SPICE not aligned (%s) \n %s" % (raster_window, header_spice["DATE-OBS"][:19]))
+                ax.set_title("small FOV not aligned (%s) \n %s" % (small_fov_window, header_spice["DATE-OBS"][:19]))
                 cbar = fig.colorbar(im, label=header_spice["BUNIT"])
                 if results_folder is not None:
-                    fig.savefig(os.path.join(results_folder, "SPICE_before_alignment_on_grid.pdf"))
+                    fig.savefig(os.path.join(results_folder, "small_fov_before_alignment_on_grid.pdf"))
                 if show:
                     fig.show()
                 fig = plt.figure(figsize=(5, 5))
@@ -566,13 +589,12 @@ class PlotFunctions:
                                        longitude_grid_arc[-1, -1] + 0.5 * dlon,
                                        latitude_grid_arc[0, 0] - 0.5 * dlat,
                                        latitude_grid_arc[-1, -1] + 0.5 * dlat])
-                ax.set_title("SPICE aligned (%s) \n %s" % (raster_window, header_spice["DATE-OBS"][:19]))
+                ax.set_title("Small FOV aligned (%s) \n %s" % (small_fov_window, header_spice["DATE-OBS"][:19]))
                 ax.set_xlabel("Solar-X [arcsec]")
                 ax.set_ylabel("Solar-Y [arcsec]")
                 cbar = fig.colorbar(im, label=header_spice["BUNIT"], )
                 if results_folder is not None:
-
-                    fig.savefig(os.path.join(results_folder, "SPICE_after_alignment_on_grid.pdf"))
+                    fig.savefig(os.path.join(results_folder, "sall_fov_after_alignment_on_grid.pdf"))
                 if show:
                     fig.show()
                 # fig.savefig(os.path.join(results_folder, "SPICE_after_alignment_on_grid.png"), dpi=150)
@@ -580,20 +602,6 @@ class PlotFunctions:
                 hdul_spice.close()
             hdul_large.close()
 
-            with fits.open(spice_raster_path) as hdul_spice:
-                hdr_spice = hdul_spice[raster_window].header.copy()
-                hdul_spice[raster_window].header["CRVAL1"] = hdr_spice["CRVAL1"] + \
-                                                             u.Quantity(parameter_alignment['crval1'][max_index[0]],
-                                                                        "arcsec").to(
-                                                                 hdul_spice[raster_window].header["CUNIT1"]).value
-                hdul_spice[raster_window].header["CRVAL2"] = hdr_spice["CRVAL2"] + \
-                                                             u.Quantity(parameter_alignment['crval2'][max_index[1]],
-                                                                        "arcsec").to(
-                                                                 hdul_spice[raster_window].header["CUNIT2"]).value
-                hdr_spice_shifted = hdul_spice[raster_window].header.copy()
-
-        crval1_old = hdr_spice["CRVAL1"]
-        crval1 = hdr_spice_shifted["CRVAL1"]
 
 # class Util:
 #     @staticmethod

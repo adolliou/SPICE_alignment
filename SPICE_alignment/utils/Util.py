@@ -332,48 +332,46 @@ class SpiceUtil:
 
         with fits.open(path_spice_l2_input) as hdul:
             for window_spice in window_spice_list:
-                hdu = hdul[window_spice]
-                hdr_shifted = hdu.header
-                SpiceUtil.recenter_crpix_in_header_L2(hdr_shifted)
+                # hdu = hdul[window_spice]
+                # hdr_shifted = hdu.header
+                SpiceUtil.recenter_crpix_in_header_L2(hdul[window_spice].header)
                 change_pcij = False
                 if lag_crval1 is not None:
-                    hdul[window_spice].header['CRVAL1'] = hdr_shifted['CRVAL1'] + u.Quantity(lag_crval1[max_index[0]],
-                                                                                             "arcsec").to(
-                        hdr_shifted['CUNIT1']).value
+                    hdul[window_spice].header['CRVAL1'] = hdul[window_spice].header['CRVAL1'
+                                                          ] + u.Quantity(lag_crval1[max_index[0]],"arcsec").to(
+                        hdul[window_spice].header['CUNIT1']).value
                 if lag_crval2 is not None:
-                    hdul[window_spice].header['CRVAL2'] = hdr_shifted['CRVAL2'] + u.Quantity(lag_crval2[max_index[1]],
+                    hdul[window_spice].header['CRVAL2'] = hdul[window_spice].header['CRVAL2'
+                                                          ] + u.Quantity(lag_crval2[max_index[1]],
                                                                                              "arcsec").to(
-                        hdr_shifted['CUNIT2']).value
+                        hdul[window_spice].header['CUNIT2']).value
                 key_rota = None
-                if "CROTA" in hdr_shifted:
+                crota = np.rad2deg(np.arccos(hdul[window_spice].header["PC1_1"]))
+                if "CROTA" in hdul[window_spice].header:
                     key_rota = "CROTA"
-                elif "CROTA2" in hdr_shifted:
+                elif "CROTA2" in hdul[window_spice].header:
                     key_rota = "CROTA2"
 
                 if lag_crota is not None:
-                    if key_rota is None:
-                        hdr_shifted["CROTA"] = u.Quantity(np.arccos(hdul[window_spice].header["PC1_1"]),
-                                                          "radian").to("deg").value
-                        key_rota = "CROTA"
-                    hdr_shifted[key_rota] += lag_crota[max_index[4]]
+                    crota += lag_crota[max_index[4]]
+                    if key_rota is not None:
+                        hdul[window_spice].header[key_rota] = crota
                     change_pcij = True
 
-
-
                 if lag_cdelta1 is not None:
-                    hdul[window_spice].header['CDELT1'] = hdr_shifted['CDELT1'] + u.Quantity(lag_crval2[max_index[2]],
+                    hdul[window_spice].header['CDELT1'] = hdul[window_spice].header['CDELT1'] + u.Quantity(lag_crval2[max_index[2]],
                                                                                              "arcsec").to(
-                        hdr_shifted['CUNIT1']).value
+                        hdul[window_spice].header['CUNIT1']).value
                     change_pcij = True
 
                 if lag_cdelta2 is not None:
-                    hdul[window_spice].header['CDELT2'] = hdr_shifted['CDELT2'] + u.Quantity(lag_crval2[max_index[3]],
+                    hdul[window_spice].header['CDELT2'] = hdul[window_spice].header['CDELT2'] + u.Quantity(lag_crval2[max_index[3]],
                                                                                              "arcsec").to(
-                        hdr_shifted['CUNIT2']).value
+                        hdul[window_spice].header['CUNIT2']).value
                     change_pcij = True
                 if change_pcij:
-                    theta = u.Quantity(hdr_shifted[key_rota], "deg").to("radian").value
-                    lam = hdr_shifted["CDELT2"] / hdr_shifted["CDELT1"]
+                    theta = np.deg2rad(crota)
+                    lam = hdul[window_spice].header["CDELT2"] / hdul[window_spice].header["CDELT1"]
                     hdul[window_spice].header["PC1_1"] = np.cos(theta)
                     hdul[window_spice].header["PC2_2"] = np.cos(theta)
                     hdul[window_spice].header["PC1_2"] = -lam * np.sin(theta)
@@ -612,6 +610,7 @@ class PlotFits:
         latitude_grid_ext = latitude_grid_ext * u.deg
 
         return longitude_grid_ext, latitude_grid_ext
+
 
 class MpUtils:
     @staticmethod

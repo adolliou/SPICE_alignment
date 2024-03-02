@@ -52,7 +52,7 @@ def test_alignement_helioprojective_shift():
 
 def test_alignement_carrington():
     folder = 'C:/Users/adolliou/PycharmProjects/Alignement/test'
-    path_hri = os.path.join(folder, 'solo_L2_eui-hrieuv174-image_20220317T095045277_V01.fits')
+    path_hri = os.path.join(folder, 'solo_L2_eui-hrieuv174-image_20220317T095045277_V01_rotated.fits')
     path_fsi = os.path.join(folder, 'solo_L2_eui-fsi174-image_20220317T095045281_V01.fits')
 
     lonlims = (230, 260)
@@ -69,7 +69,10 @@ def test_alignement_carrington():
     lag_cdelta1 = [0]
     lag_cdelta2 = [0]
 
+    # lag_crota = [0.75]
+
     lag_crota = [0.75]
+
     min_value = 0
     max_value = 1310
 

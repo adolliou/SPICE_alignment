@@ -15,6 +15,10 @@ import warnings
 from ..utils import Util
 
 
+def divide_chunks(l, n):
+    # looping till length l
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
 class Alignment:
 
     def __init__(self, large_fov_known_pointing: str, small_fov_to_correct: str, lag_crval1: np.array,
@@ -106,17 +110,18 @@ class Alignment:
         if 'd_crota' in kwargs.keys():
             if 'CROTA' in hdr:
                 hdr['CROTA'] = self.crota_ref + kwargs["d_crota"]
-                crot = hdr['CROTA']
+                # crot = hdr['CROTA']
             elif 'CROTA2' in hdr:
                 hdr['CROTA2'] = self.crota_ref + kwargs["d_crota"]
-                crot = hdr['CROTA2']
+                # crot = hdr['CROTA2']
             else:
                 if kwargs["d_crota"] != 0.0:
                     crot = np.rad2deg(np.arccos(hdr["PC1_1"]))
                     hdr["CROTA"] = crot
+            crot = self.crota_ref + kwargs["d_crota"]
                     # raise NotImplementedError
         if ((('d_cdelta1' in kwargs.keys()) or ('d_cdelta2' in kwargs.keys()) or ('d_crota' in kwargs.keys()))):
-            rho = np.arccos(hdr["PC1_1"])
+            rho = np.deg2rad(crot)
             lam = hdr["CDELT2"] / hdr["CDELT1"]
             hdr["PC1_1"] = np.cos(rho)
             hdr["PC2_2"] = np.cos(rho)
@@ -229,7 +234,6 @@ class Alignment:
         self.coordinate_frame = "helioprojective"
         f_large = Fits.open(self.large_fov_known_pointing)
         f_small = Fits.open(self.small_fov_to_correct)
-
         dat_large_var = np.array(f_large[self.large_fov_window].data.copy(), dtype=np.float64)
         self.data_large = dat_large_var
 
@@ -355,13 +359,18 @@ class Alignment:
 
                                 Processes.append(Process(target=self._iteration_step_along_crval2, kwargs=kwargs))
                 len_processes = np.arange(len(Processes))
-                len_processes_split = np.array_split(len_processes, self.counts)
+                start_index = np.arange(0, len(Processes),  self.counts)
+
+                len_processes_split = divide_chunks(l=len_processes, n=self.counts)
+                # len_processes_split = np.array_split(len_processes, self.counts)
+                print(f'{len_processes_split=}')
                 for sublist in len_processes_split:
                     if len(sublist) > 0:
                         for index_processes in sublist:
                             Processes[index_processes].start()
                 #
-                        for index_processes in sublist:
+                        for ff, index_processes in enumerate(sublist):
+                            print(f'Start process #{ff}')
                             Processes[index_processes].join()
                 # pool = mp.Pool(count)
                 # results[:, :, ii, ll, jj, kk] = pool.map(partial(self._iteration_step_along_crval2,

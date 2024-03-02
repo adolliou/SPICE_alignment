@@ -1,12 +1,12 @@
-from .alignement_pixels import AlignementPixels
+from .alignment_pixels import AlignmentPixels
 from astropy.io import fits
 import numpy as np
 from astropy.wcs import WCS
 import astropy.units as u
-from . import Util
+from ..utils import Util
 
 
-class AlignementSpicePixel(AlignementPixels):
+class AlignementSpicePixel(AlignmentPixels):
     def __init__(self, fsi_path: str, fsi_window: int, spice_path: str, spice_window: int, index_amplitude=None,):
         super().__init__(fsi_path, fsi_window, spice_path, spice_window)
         self.fsi_path = fsi_path
