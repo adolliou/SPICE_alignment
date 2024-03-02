@@ -489,7 +489,7 @@ class PlotFunctions:
                 norm = ImageNormalize(stretch=LinearStretch(), vmin=np.max((min, 1)), vmax=max)
 
                 longitude, latitude = EUIUtil.extract_EUI_coordinates(header_spice, dsun=False)
-                longitude_grid, latitude_grid = PlotFits.build_regular_grid(longitude, latitude)
+                longitude_grid, latitude_grid, dlon, dlat = PlotFits.build_regular_grid(longitude, latitude)
                 data_fsi = hdul_large[small_fov_window].data
                 header_fsi = hdul_large[small_fov_window].header
 
@@ -537,8 +537,8 @@ class PlotFunctions:
 
                 longitude_grid_arc = CommonUtil.ang2pipi(longitude_grid.to("arcsec")).value
                 latitude_grid_arc = CommonUtil.ang2pipi(latitude_grid.to("arcsec")).value
-                dlon = longitude_grid_arc[1, 1] - longitude_grid_arc[0, 0]
-                dlat = latitude_grid_arc[1, 1] - latitude_grid_arc[0, 0]
+                dlon = longitude_grid_arc[0, 1] - longitude_grid_arc[0, 0]
+                dlat = latitude_grid_arc[1, 0] - latitude_grid_arc[0, 0]
 
                 isnan = np.isnan(data_spice_interp)
                 min = np.percentile(data_spice_interp[~isnan], 3)

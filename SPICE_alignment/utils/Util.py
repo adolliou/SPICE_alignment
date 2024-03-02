@@ -574,14 +574,13 @@ class PlotFits:
                     show_xlabel=True, show_ylabel=True, plot_colorbar=True):
 
         longitude, latitude, dsun = EUIUtil.extract_EUI_coordinates(hdr_main)
-        longitude_grid, latitude_grid = PlotFits.build_regular_grid(longitude=longitude, latitude=latitude)
+        longitude_grid, latitude_grid, dlon, dlat = PlotFits.build_regular_grid(longitude=longitude, latitude=latitude)
         w = WCS(hdr_main)
         x, y = w.world_to_pixel(longitude_grid, latitude_grid)
         image_on_regular_grid = CommonUtil.interpol2d(data_main, x=x, y=y, fill=-32762, order=1)
         image_on_regular_grid[image_on_regular_grid == -32762] = np.nan
-
-        dlon = (longitude_grid[1, 1] - longitude_grid[0, 0]).to("arcsec").value
-        dlat = (latitude_grid[1, 1] - latitude_grid[0, 0]).to("arcsec").value
+        # dlon = (longitude_grid[1, 1] - longitude_grid[0, 0]).to("arcsec").value
+        # dlat = (latitude_grid[1, 1] - latitude_grid[0, 0]).to("arcsec").value
 
         return_im = False
         if fig is None:
@@ -714,8 +713,9 @@ class PlotFits:
 
         longitude_grid = longitude_grid * u.deg
         latitude_grid = latitude_grid * u.deg
-
-        return longitude_grid, latitude_grid
+        dlon = dlon*u.deg
+        dlat = dlon*u.deg
+        return longitude_grid, latitude_grid, dlon, dlat
 
     @staticmethod
     def extend_regular_grid(longitude_grid, latitude_grid, delta_longitude, delta_latitude):
