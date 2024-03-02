@@ -377,11 +377,12 @@ class Alignment:
 
                                 Processes.append(Process(target=self._iteration_step_along_crval2, kwargs=kwargs))
                 len_processes = np.arange(len(Processes))
-                start_index = np.arange(0, len(Processes), self.counts)
-
+                # start_index = np.arange(0, len(Processes), self.counts)
+                if self.counts is None:
+                    self.counts = mp.cpu_count()
                 len_processes_split = divide_chunks(l=len_processes, n=self.counts)
                 # len_processes_split = np.array_split(len_processes, self.counts)
-                print(f'{len_processes_split=}')
+                # print(f'{len_processes_split=}')
                 for sublist in len_processes_split:
                     if len(sublist) > 0:
                         for index_processes in sublist:
