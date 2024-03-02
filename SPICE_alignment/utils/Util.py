@@ -575,6 +575,9 @@ class PlotFits:
 
         longitude, latitude, dsun = EUIUtil.extract_EUI_coordinates(hdr_main)
         longitude_grid, latitude_grid, dlon, dlat = PlotFits.build_regular_grid(longitude=longitude, latitude=latitude)
+
+        dlon = dlon.to("arcsec").value
+        dlat = dlat.to("arcsec").value
         w = WCS(hdr_main)
         x, y = w.world_to_pixel(longitude_grid, latitude_grid)
         image_on_regular_grid = CommonUtil.interpol2d(data_main, x=x, y=y, fill=-32762, order=1)

@@ -490,6 +490,9 @@ class PlotFunctions:
 
                 longitude, latitude = EUIUtil.extract_EUI_coordinates(header_spice, dsun=False)
                 longitude_grid, latitude_grid, dlon, dlat = PlotFits.build_regular_grid(longitude, latitude)
+                dlon = dlon.to("arcsec").value
+                dlat = dlat.to("arcsec").value
+
                 data_fsi = hdul_large[small_fov_window].data
                 header_fsi = hdul_large[small_fov_window].header
 
