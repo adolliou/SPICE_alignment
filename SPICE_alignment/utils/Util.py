@@ -92,6 +92,69 @@ class CommonUtil:
 
         return dst
 
+    @staticmethod
+    def write_corrected_fits(path_l2_input: str, window_list, path_l2_output: str, corr: np.array,
+                             lag_crval1=None, lag_crval2=None, lag_crota=None,
+                             lag_cdelta1=None, lag_cdelta2=None,
+                             ):
+        max_index = np.unravel_index(np.nanargmax(corr), corr.shape)
+        with fits.open(path_l2_input) as hdul:
+            for window in window_list:
+
+                hdu = hdul[window]
+                hdr = hdu.header
+                if ("EUI" in hdr["TELESCOP"]) or ("AIA" in hdr["TELESCOP"]):
+                    EUIUtil.recenter_crpix_in_header(hdul[window].header)
+                elif "SPICE" in hdr["TELESCOP"]:
+                    SpiceUtil.recenter_crpix_in_header_L2(hdul[window].header)
+                else:
+                    raise NotImplementedError
+
+                change_pcij = False
+                if lag_crval1 is not None:
+                    hdul[window].header['CRVAL1'] = hdul[window].header['CRVAL1'
+                                                    ] + u.Quantity(lag_crval1[max_index[0]], "arcsec").to(
+                        hdul[window].header['CUNIT1']).value
+                if lag_crval2 is not None:
+                    hdul[window].header['CRVAL2'] = hdul[window].header['CRVAL2'
+                                                    ] + u.Quantity(lag_crval2[max_index[1]],
+                                                                   "arcsec").to(
+                        hdul[window].header['CUNIT2']).value
+                key_rota = None
+                crota = np.rad2deg(np.arccos(hdul[window].header["PC1_1"]))
+                if "CROTA" in hdul[window].header:
+                    key_rota = "CROTA"
+                elif "CROTA2" in hdul[window].header:
+                    key_rota = "CROTA2"
+
+                if lag_crota is not None:
+                    crota += lag_crota[max_index[4]]
+                    if key_rota is not None:
+                        hdul[window].header[key_rota] = crota
+                    change_pcij = True
+
+                if lag_cdelta1 is not None:
+                    hdul[window].header['CDELT1'] = hdul[window].header['CDELT1'] + u.Quantity(lag_crval2[max_index[2]],
+                                                                                               "arcsec").to(
+                        hdul[window].header['CUNIT1']).value
+                    change_pcij = True
+
+                if lag_cdelta2 is not None:
+                    hdul[window].header['CDELT2'] = hdul[window].header['CDELT2'] + u.Quantity(lag_crval2[max_index[3]],
+                                                                                               "arcsec").to(
+                        hdul[window].header['CUNIT2']).value
+                    change_pcij = True
+                if change_pcij:
+                    theta = np.deg2rad(crota)
+                    lam = hdul[window].header["CDELT2"] / hdul[window].header["CDELT1"]
+                    hdul[window].header["PC1_1"] = np.cos(theta)
+                    hdul[window].header["PC2_2"] = np.cos(theta)
+                    hdul[window].header["PC1_2"] = -lam * np.sin(theta)
+                    hdul[window].header["PC2_1"] = (1 / lam) * np.sin(theta)
+
+            hdul.writeto(path_l2_output, overwrite=True)
+            hdul.close()
+
 
 class EUIUtil:
     @staticmethod
@@ -161,6 +224,66 @@ class EUIUtil:
         hdr["CRVAL2"] = lat_mid
         hdr["CRPIX1"] = (naxis1 + 1) / 2
         hdr["CRPIX2"] = (naxis2 + 1) / 2
+
+    @staticmethod
+    def write_corrected_fits(path_eui_l2_input: str, window_eui, path_eui_l2_output: str, corr: np.array,
+                             lag_crval1=None, lag_crval2=None, lag_crota=None,
+                             lag_cdelta1=None, lag_cdelta2=None,
+                             ):
+        raise DeprecationWarning
+
+        max_index = np.unravel_index(np.nanargmax(corr), corr.shape)
+
+        with fits.open(path_eui_l2_input) as hdul:
+            # hdu = hdul[window_spice]
+            # hdr_shifted = hdu.header
+            SpiceUtil.recenter_crpix_in_header_L2(hdul[window_eui].header)
+            change_pcij = False
+            if lag_crval1 is not None:
+                hdul[window_eui].header['CRVAL1'] = hdul[window_eui].header['CRVAL1'
+                                                    ] + u.Quantity(lag_crval1[max_index[0]], "arcsec").to(
+                    hdul[window_eui].header['CUNIT1']).value
+            if lag_crval2 is not None:
+                hdul[window_eui].header['CRVAL2'] = hdul[window_eui].header['CRVAL2'
+                                                    ] + u.Quantity(lag_crval2[max_index[1]],
+                                                                   "arcsec").to(
+                    hdul[window_eui].header['CUNIT2']).value
+            key_rota = None
+            crota = np.rad2deg(np.arccos(hdul[window_eui].header["PC1_1"]))
+            if "CROTA" in hdul[window_eui].header:
+                key_rota = "CROTA"
+            elif "CROTA2" in hdul[window_eui].header:
+                key_rota = "CROTA2"
+
+            if lag_crota is not None:
+                crota += lag_crota[max_index[4]]
+                if key_rota is not None:
+                    hdul[window_eui].header[key_rota] = crota
+                change_pcij = True
+
+            if lag_cdelta1 is not None:
+                hdul[window_eui].header['CDELT1'] = hdul[window_eui].header['CDELT1'] + u.Quantity(
+                    lag_crval2[max_index[2]],
+                    "arcsec").to(
+                    hdul[window_eui].header['CUNIT1']).value
+                change_pcij = True
+
+            if lag_cdelta2 is not None:
+                hdul[window_eui].header['CDELT2'] = hdul[window_eui].header['CDELT2'] + u.Quantity(
+                    lag_crval2[max_index[3]],
+                    "arcsec").to(
+                    hdul[window_eui].header['CUNIT2']).value
+                change_pcij = True
+            if change_pcij:
+                theta = np.deg2rad(crota)
+                lam = hdul[window_eui].header["CDELT2"] / hdul[window_eui].header["CDELT1"]
+                hdul[window_eui].header["PC1_1"] = np.cos(theta)
+                hdul[window_eui].header["PC2_2"] = np.cos(theta)
+                hdul[window_eui].header["PC1_2"] = -lam * np.sin(theta)
+                hdul[window_eui].header["PC2_1"] = (1 / lam) * np.sin(theta)
+
+        hdul.writeto(path_eui_l2_output, overwrite=True)
+        hdul.close()
 
 
 class SpiceUtil:
@@ -338,12 +461,12 @@ class SpiceUtil:
                 change_pcij = False
                 if lag_crval1 is not None:
                     hdul[window_spice].header['CRVAL1'] = hdul[window_spice].header['CRVAL1'
-                                                          ] + u.Quantity(lag_crval1[max_index[0]],"arcsec").to(
+                                                          ] + u.Quantity(lag_crval1[max_index[0]], "arcsec").to(
                         hdul[window_spice].header['CUNIT1']).value
                 if lag_crval2 is not None:
                     hdul[window_spice].header['CRVAL2'] = hdul[window_spice].header['CRVAL2'
                                                           ] + u.Quantity(lag_crval2[max_index[1]],
-                                                                                             "arcsec").to(
+                                                                         "arcsec").to(
                         hdul[window_spice].header['CUNIT2']).value
                 key_rota = None
                 crota = np.rad2deg(np.arccos(hdul[window_spice].header["PC1_1"]))
@@ -359,14 +482,16 @@ class SpiceUtil:
                     change_pcij = True
 
                 if lag_cdelta1 is not None:
-                    hdul[window_spice].header['CDELT1'] = hdul[window_spice].header['CDELT1'] + u.Quantity(lag_crval2[max_index[2]],
-                                                                                             "arcsec").to(
+                    hdul[window_spice].header['CDELT1'] = hdul[window_spice].header['CDELT1'] + u.Quantity(
+                        lag_crval2[max_index[2]],
+                        "arcsec").to(
                         hdul[window_spice].header['CUNIT1']).value
                     change_pcij = True
 
                 if lag_cdelta2 is not None:
-                    hdul[window_spice].header['CDELT2'] = hdul[window_spice].header['CDELT2'] + u.Quantity(lag_crval2[max_index[3]],
-                                                                                             "arcsec").to(
+                    hdul[window_spice].header['CDELT2'] = hdul[window_spice].header['CDELT2'] + u.Quantity(
+                        lag_crval2[max_index[3]],
+                        "arcsec").to(
                         hdul[window_spice].header['CUNIT2']).value
                     change_pcij = True
                 if change_pcij:

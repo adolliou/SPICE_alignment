@@ -88,7 +88,7 @@ class PlotFunctions:
         if type_plot == "xy":
             lag_dx_label = 'CRVAL1 [arcsec]'
             lag_dy_label = 'CRVAL2 [arcsec]'
-            corr = corr[:, :, max_index[2], max_index[3], max_index[4], max_index[5]]
+            corr = corr[:, :, max_index[2], max_index[3], max_index[4]]
         else:
             raise NotImplementedError
 
