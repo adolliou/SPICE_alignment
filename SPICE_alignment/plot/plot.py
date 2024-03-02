@@ -480,8 +480,8 @@ class PlotFunctions:
                 dlon = dlon.to("arcsec").value
                 dlat = dlat.to("arcsec").value
 
-                data_fsi = hdul_large[small_fov_window].data
-                header_fsi = hdul_large[small_fov_window].header
+                data_fsi = hdul_large[large_fov_window].data
+                header_fsi = hdul_large[large_fov_window].header
 
                 header_spice["BUNIT"] = hdul_spice[small_fov_window].header["BUNIT"]
                 hdr_spice_shifted["BUNIT"] = hdul_spice[small_fov_window].header["BUNIT"]
