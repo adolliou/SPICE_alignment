@@ -95,7 +95,7 @@ class CommonUtil:
     @staticmethod
     def write_corrected_fits(path_l2_input: str, window_list, path_l2_output: str, corr: np.array,
                              lag_crval1=None, lag_crval2=None, lag_crota=None,
-                             lag_cdelta1=None, lag_cdelta2=None,
+                             lag_cdelt1=None, lag_cdelt2=None,
                              ):
         max_index = np.unravel_index(np.nanargmax(corr), corr.shape)
         with fits.open(path_l2_input) as hdul:
@@ -133,14 +133,14 @@ class CommonUtil:
                         hdul[window].header[key_rota] = crota
                     change_pcij = True
 
-                if lag_cdelta1 is not None:
-                    hdul[window].header['CDELT1'] = hdul[window].header['CDELT1'] + u.Quantity(lag_crval2[max_index[2]],
+                if lag_cdelt1 is not None:
+                    hdul[window].header['CDELT1'] = hdul[window].header['CDELT1'] + u.Quantity(lag_cdelt1[max_index[2]],
                                                                                                "arcsec").to(
                         hdul[window].header['CUNIT1']).value
                     change_pcij = True
 
-                if lag_cdelta2 is not None:
-                    hdul[window].header['CDELT2'] = hdul[window].header['CDELT2'] + u.Quantity(lag_crval2[max_index[3]],
+                if lag_cdelt2 is not None:
+                    hdul[window].header['CDELT2'] = hdul[window].header['CDELT2'] + u.Quantity(lag_cdelt2[max_index[3]],
                                                                                                "arcsec").to(
                         hdul[window].header['CUNIT2']).value
                     change_pcij = True
@@ -263,14 +263,14 @@ class EUIUtil:
 
             if lag_cdelta1 is not None:
                 hdul[window_eui].header['CDELT1'] = hdul[window_eui].header['CDELT1'] + u.Quantity(
-                    lag_crval2[max_index[2]],
+                    lag_cdelta1[max_index[2]],
                     "arcsec").to(
                     hdul[window_eui].header['CUNIT1']).value
                 change_pcij = True
 
             if lag_cdelta2 is not None:
                 hdul[window_eui].header['CDELT2'] = hdul[window_eui].header['CDELT2'] + u.Quantity(
-                    lag_crval2[max_index[3]],
+                    lag_cdelta2[max_index[3]],
                     "arcsec").to(
                     hdul[window_eui].header['CUNIT2']).value
                 change_pcij = True
@@ -483,14 +483,14 @@ class SpiceUtil:
 
                 if lag_cdelta1 is not None:
                     hdul[window_spice].header['CDELT1'] = hdul[window_spice].header['CDELT1'] + u.Quantity(
-                        lag_crval2[max_index[2]],
+                        lag_cdelta1[max_index[2]],
                         "arcsec").to(
                         hdul[window_spice].header['CUNIT1']).value
                     change_pcij = True
 
                 if lag_cdelta2 is not None:
                     hdul[window_spice].header['CDELT2'] = hdul[window_spice].header['CDELT2'] + u.Quantity(
-                        lag_crval2[max_index[3]],
+                        lag_cdelta2[max_index[3]],
                         "arcsec").to(
                         hdul[window_spice].header['CUNIT2']).value
                     change_pcij = True
