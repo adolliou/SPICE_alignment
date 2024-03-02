@@ -101,18 +101,18 @@ class PlotFunctions:
         ax.add_patch(rect)
         ax.axhline(y=lag_dy[max_index[1]], color='r', linestyle='--', linewidth=0.5)
         ax.axvline(x=lag_dx[max_index[0]], color='r', linestyle='--', linewidth=0.5)
-        if (lag_drot is not None) & (lag_cdelt1 is None):
+        if (lag_drot is not None) & (lag_cdelta1 is None):
             textstr = '\n'.join((
                 r'$dx=%.1f$ %s' % (lag_dx[max_index[0]], unit),
                 r'$dy=%.1f$ %s' % (lag_dy[max_index[1]], unit),
                 r'$drota=%.2f$ $^\circ$' % (lag_drot[max_index[4]])))
-        elif (lag_drot is not None) & (lag_cdelt1 is not None):
+        elif (lag_drot is not None) & (lag_cdelta1 is not None):
             textstr = '\n'.join((
                 r'$dx=%.1f$ %s' % (lag_dx[max_index[0]], unit),
                 r'$dy=%.1f$ %s' % (lag_dy[max_index[1]], unit),
                 r'$drota=%.2f$ $^\circ$' % (lag_drot[max_index[4]]),
-                r'$cdelt1=%.2f$ $^\circ$' % (lag_cdelt1[max_index[2]]),
-                r'$cdelt2=%.2f$ $^\circ$' % (lag_cdelt2[max_index[3]])))
+                r'$cdelt1=%.2f$ $^\circ$' % (lag_cdelta1[max_index[2]]),
+                r'$cdelt2=%.2f$ $^\circ$' % (lag_cdelta2[max_index[3]])))
         else:
             textstr = '\n'.join((
                 r'$\delta CRVAL1=%.2f$ %s' % (lag_dx[max_index[0]], unit),
