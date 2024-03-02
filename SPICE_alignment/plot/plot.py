@@ -383,15 +383,15 @@ class PlotFunctions:
     @staticmethod
     def plot_co_alignment(large_fov_window, large_fov_path, corr,
                           small_fov_window, small_fov_path, levels_percentile=[0.8],
-                          lag_crval1=None, lag_crval2=None, lag_crota=None, lag_cdelt1=None, lag_cdelt2=None,
+                          lag_crval1=None, lag_crval2=None, lag_crota=None, lag_cdelta1=None, lag_cdelta2=None,
                           show=False, results_folder=None, ):
 
         parameter_alignment = {
             "crval1": lag_crval1,
             "crval2": lag_crval2,
             "crota": lag_crota,
-            "cdelt1": lag_cdelt1,
-            "cdelt2": lag_cdelt2,
+            "cdelt1": lag_cdelta1,
+            "cdelt2": lag_cdelta2,
 
         }
 

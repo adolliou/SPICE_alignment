@@ -95,7 +95,7 @@ class CommonUtil:
     @staticmethod
     def write_corrected_fits(path_l2_input: str, window_list, path_l2_output: str, corr: np.array,
                              lag_crval1=None, lag_crval2=None, lag_crota=None,
-                             lag_cdelt1=None, lag_cdelt2=None,
+                             lag_cdelta1=None, lag_cdelta2=None,
                              ):
         max_index = np.unravel_index(np.nanargmax(corr), corr.shape)
         with fits.open(path_l2_input) as hdul:
