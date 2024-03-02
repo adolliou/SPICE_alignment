@@ -113,7 +113,7 @@ class AlignmentSpice(Alignment):
         omega_car = np.deg2rad(360 / 25.38 / 86400)  # rad s-1
         if band == 174:
             band = 171
-        omega = omega_car + Util.EUIUtil.diff_rot(B0, f'EIT {band}')  # rad s-1
+        omega = omega_car + Util.AlignEUIUtil.diff_rot(B0, f'EIT {band}')  # rad s-1
         # helioprojective rotation rate for s/c
         Rsun = self.hdr_small['RSUN_REF']  # m
         Dsun = self.hdr_small['DSUN_OBS']  # m
@@ -138,7 +138,7 @@ class AlignmentSpice(Alignment):
 
         data_small = np.array(hdul_small[self.small_fov_window].data.copy(), dtype=np.float64)
         header_spice = hdul_small[self.small_fov_window].header
-        ymin, ymax = Util.SpiceUtil.vertical_edges_limits(header_spice)
+        ymin, ymax = Util.AlignSpiceUtil.vertical_edges_limits(header_spice)
         w_spice = WCS(hdul_small[self.small_fov_window].header.copy())
         w_xyt = w_spice.dropaxis(2)
         w_xyt.wcs.pc[2, 0] = 0
@@ -201,7 +201,7 @@ class AlignementSpice_iterative_context_raster(AlignmentSpice):
                            d_cdelta1=d_cdelta1, d_cdelta2=d_cdelta2,
                            d_crota=d_crota)
         hdr_small_shft_unflattened = self.header_spice_unflattened.copy()
-        Util.SpiceUtil.recenter_crpix_in_header_L2(hdr_small_shft_unflattened)
+        Util.AlignSpiceUtil.recenter_crpix_in_header_L2(hdr_small_shft_unflattened)
 
         self._shift_header(hdr_small_shft_unflattened, d_crval1=d_crval1, d_crval2=d_crval2,
                            d_cdelta1=d_cdelta1, d_cdelta2=d_cdelta2,

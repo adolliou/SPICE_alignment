@@ -305,10 +305,10 @@ class Alignment:
 
         elif "deg" in self.unit1:
             warnings.warn("Units of headers in deg: Modyfying inputs units to deg.")
-            self.lag_crval1 = Util.CommonUtil.ang2pipi(u.Quantity(self.lag_crval1, "arcsec")).to("deg").value
-            self.lag_crval2 = Util.CommonUtil.ang2pipi(u.Quantity(self.lag_crval2, "arcsec")).to("deg").value
-            self.lag_cdelta1 = Util.CommonUtil.ang2pipi(u.Quantity(self.lag_cdelta1, "arcsec")).to("deg").value
-            self.lag_cdelta2 = Util.CommonUtil.ang2pipi(u.Quantity(self.lag_cdelta2, "arcsec")).to("deg").value
+            self.lag_crval1 = Util.AlignCommonUtil.ang2pipi(u.Quantity(self.lag_crval1, "arcsec")).to("deg").value
+            self.lag_crval2 = Util.AlignCommonUtil.ang2pipi(u.Quantity(self.lag_crval2, "arcsec")).to("deg").value
+            self.lag_cdelta1 = Util.AlignCommonUtil.ang2pipi(u.Quantity(self.lag_cdelta1, "arcsec")).to("deg").value
+            self.lag_cdelta2 = Util.AlignCommonUtil.ang2pipi(u.Quantity(self.lag_cdelta2, "arcsec")).to("deg").value
             self.unit_lag = "deg"
         if self.lag_solar_r is None:
             self.lag_solar_r = np.array([1.004])
@@ -466,17 +466,17 @@ class Alignment:
 
         hdr_cut = self.hdr_small.copy()
 
-        longitude_cut, latitude_cut, dsun_obs_cut = Util.EUIUtil.extract_EUI_coordinates(hdr_cut)
+        longitude_cut, latitude_cut, dsun_obs_cut = Util.AlignEUIUtil.extract_EUI_coordinates(hdr_cut)
         w_xy_large = WCS(self.hdr_large.copy())
         x_cut, y_cut = w_xy_large.world_to_pixel(longitude_cut, latitude_cut)
-        image_large_cut = Util.CommonUtil.interpol2d(np.array(data_large, dtype=np.float64), x=x_cut, y=y_cut, order=1,
+        image_large_cut = Util.AlignCommonUtil.interpol2d(np.array(data_large, dtype=np.float64), x=x_cut, y=y_cut, order=1,
                                                      fill=-32768)
         image_large_cut[image_large_cut == -32768] = np.nan
         self.hdr_large = hdr_cut.copy()
 
         w_xy_small = WCS(self.hdr_small.copy())
         x_cut, y_cut = w_xy_small.world_to_pixel(longitude_cut, latitude_cut)
-        image_small_cut = Util.CommonUtil.interpol2d(np.array(self.data_small.copy(), dtype=np.float64), x=x_cut,
+        image_small_cut = Util.AlignCommonUtil.interpol2d(np.array(self.data_small.copy(), dtype=np.float64), x=x_cut,
                                                      y=y_cut,
                                                      order=1, fill=-32768)
         image_small_cut[image_small_cut == -32768] = np.nan
@@ -501,9 +501,9 @@ class Alignment:
     def _interpolate_on_large_data_grid(self, d_solar_r, data, hdr):
 
         w_xy_small = WCS(hdr)
-        longitude_large, latitude_large, dsun_obs_large = Util.EUIUtil.extract_EUI_coordinates(self.hdr_large)
+        longitude_large, latitude_large, dsun_obs_large = Util.AlignEUIUtil.extract_EUI_coordinates(self.hdr_large)
         x_large, y_large = w_xy_small.world_to_pixel(longitude_large, latitude_large)
-        image_small_shft = Util.CommonUtil.interpol2d(np.array(copy.deepcopy(data), dtype=np.float64),
+        image_small_shft = Util.AlignCommonUtil.interpol2d(np.array(copy.deepcopy(data), dtype=np.float64),
                                                       x=x_large, y=y_large, order=1,
                                                       fill=-32768)
         image_small_shft = np.where(image_small_shft == -32768, np.nan, image_small_shft)

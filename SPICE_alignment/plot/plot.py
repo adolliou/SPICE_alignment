@@ -9,23 +9,10 @@ import matplotlib.patches as patches
 import cv2
 import scipy
 from astropy.io import fits
-from ..utils.Util import SpiceUtil, EUIUtil, PlotFits, CommonUtil
+from ..utils.Util import AlignSpiceUtil, AlignEUIUtil, PlotFits, AlignCommonUtil
 from astropy.time import Time
 import os
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-
-SMALL_SIZE = 8
-MEDIUM_SIZE = 10
-BIGGER_SIZE = 12
-
-plt.rc('font', size=SMALL_SIZE)  # controls default text sizes
-plt.rc('axes', titlesize=SMALL_SIZE)  # fontsize of the axes title
-plt.rc('axes', labelsize=SMALL_SIZE)  # fontsize of the x and y labels
-plt.rc('xtick', labelsize=SMALL_SIZE)  # fontsize of the tick labels
-plt.rc('ytick', labelsize=SMALL_SIZE)  # fontsize of the tick labels
-plt.rc('legend', fontsize=SMALL_SIZE)  # legend fontsize
-plt.rc('figure', titlesize=MEDIUM_SIZE)  # fontsize of the figure title
-
 
 def interpol2d(image, x, y, order=1, fill=0, opencv=False, dst=None):
     """
@@ -185,7 +172,7 @@ class PlotFunctions:
     def simple_plot(hdr_main, data_main, path_save=None, show=False, ax=None, fig=None, norm=None,
                     show_xlabel=True, show_ylabel=True, plot_colorbar=True, cmap="plasma"):
 
-        longitude, latitude, dsun = EUIUtil.extract_EUI_coordinates(hdr_main)
+        longitude, latitude, dsun = AlignEUIUtil.extract_EUI_coordinates(hdr_main)
         longitude_grid, latitude_grid = PlotFunctions._build_regular_grid(longitude=longitude, latitude=latitude)
         w = WCS(hdr_main)
         x, y = w.world_to_pixel(longitude_grid, latitude_grid)
@@ -225,9 +212,9 @@ class PlotFunctions:
                      ax=None, fig=None, norm=None, show_xlabel=True, show_ylabel=True, plot_colorbar=True,
                      header_coordinates_plot=None, cmap="plasma", return_grid=False, aspect=1):
         if header_coordinates_plot is None:
-            longitude_main, latitude_main = EUIUtil.extract_EUI_coordinates(hdr_contour, dsun=False)
+            longitude_main, latitude_main = AlignEUIUtil.extract_EUI_coordinates(hdr_contour, dsun=False)
         else:
-            longitude_main, latitude_main = EUIUtil.extract_EUI_coordinates(header_coordinates_plot, dsun=False)
+            longitude_main, latitude_main = AlignEUIUtil.extract_EUI_coordinates(header_coordinates_plot, dsun=False)
 
         longitude_grid, latitude_grid = PlotFunctions._build_regular_grid(longitude=longitude_main,
                                                                           latitude=latitude_main)
@@ -245,8 +232,8 @@ class PlotFunctions:
                                        x=x_contour, y=y_contour,
                                        order=1, fill=-32768)
         image_contour_cut[image_contour_cut == -32768] = np.nan
-        longitude_grid_arc = CommonUtil.ang2pipi(longitude_grid).to("arcsec").value
-        latitude_grid_arc = CommonUtil.ang2pipi(latitude_grid).to("arcsec").value
+        longitude_grid_arc = AlignCommonUtil.ang2pipi(longitude_grid).to("arcsec").value
+        latitude_grid_arc = AlignCommonUtil.ang2pipi(latitude_grid).to("arcsec").value
         dlon = longitude_grid_arc[1, 1] - longitude_grid_arc[0, 0]
         dlat = latitude_grid_arc[1, 1] - latitude_grid_arc[0, 0]
         return_im = True
@@ -334,14 +321,14 @@ class PlotFunctions:
             min = np.percentile(data_contour_2[~isnan], 5)
             max = np.percentile(data_contour_2[~isnan], 98)
             norm_contour = ImageNormalize(stretch=LinearStretch(), vmin=min, vmax=max)
-        longitude_grid_arc = CommonUtil.ang2pipi(lon_grid).to("arcsec").value
-        latitude_grid_arc = CommonUtil.ang2pipi(lat_grid).to("arcsec").value
+        longitude_grid_arc = AlignCommonUtil.ang2pipi(lon_grid).to("arcsec").value
+        latitude_grid_arc = AlignCommonUtil.ang2pipi(lat_grid).to("arcsec").value
         dlon = longitude_grid_arc[1, 1] - longitude_grid_arc[0, 0]
         dlat = latitude_grid_arc[1, 1] - latitude_grid_arc[0, 0]
 
         w_xy = WCS(hdr_contour_2)
         x, y = w_xy.world_to_pixel(lon_grid, lat_grid)
-        data_contour_2_interp = CommonUtil.interpol2d(data_contour_2, x=x, y=y, order=1, fill=-32762)
+        data_contour_2_interp = AlignCommonUtil.interpol2d(data_contour_2, x=x, y=y, order=1, fill=-32762)
         data_contour_2_interp = np.where(data_contour_2_interp == -32762, np.nan, data_contour_2_interp)
         im3 = ax3.imshow(data_contour_2_interp, origin="lower", interpolation="none", norm=norm_contour, cmap=cmap2,
                          aspect=aspect,
@@ -370,10 +357,10 @@ class PlotFunctions:
         dlon = np.abs((longitude[1, 1] - longitude[0, 0]).to(u.deg).value)
         dlat = np.abs((latitude[1, 1] - latitude[0, 0]).to(u.deg).value)
         longitude_grid, latitude_grid = np.meshgrid(
-            np.arange(np.min(CommonUtil.ang2pipi(longitude).to(u.deg).value),
-                      np.max(CommonUtil.ang2pipi(longitude).to(u.deg).value), dlon),
-            np.arange(np.min(CommonUtil.ang2pipi(latitude).to(u.deg).value),
-                      np.max(CommonUtil.ang2pipi(latitude).to(u.deg).value), dlat))
+            np.arange(np.min(AlignCommonUtil.ang2pipi(longitude).to(u.deg).value),
+                      np.max(AlignCommonUtil.ang2pipi(longitude).to(u.deg).value), dlon),
+            np.arange(np.min(AlignCommonUtil.ang2pipi(latitude).to(u.deg).value),
+                      np.max(AlignCommonUtil.ang2pipi(latitude).to(u.deg).value), dlat))
 
         longitude_grid = longitude_grid * u.deg
         latitude_grid = latitude_grid * u.deg
@@ -404,14 +391,14 @@ class PlotFunctions:
                 header_spice = hdul_spice[small_fov_window].header.copy()
 
                 if "HRI_EUV" in  header_spice["TELESCOP"]:
-                    EUIUtil.recenter_crpix_in_header(header_spice)
+                    AlignEUIUtil.recenter_crpix_in_header(header_spice)
                     w_xy = WCS(header_spice)
                     header_spice = w_xy.to_header().copy()
                     data_spice = np.array(hdul_spice[small_fov_window].data.copy(), dtype=np.float64)
                 elif  "SPICE" in header_spice["TELESCOP"]:
-                    SpiceUtil.recenter_crpix_in_header_L2(header_spice)
+                    AlignSpiceUtil.recenter_crpix_in_header_L2(header_spice)
                     w_spice = WCS(header_spice)
-                    ymin, ymax = SpiceUtil.vertical_edges_limits(header_spice)
+                    ymin, ymax = AlignSpiceUtil.vertical_edges_limits(header_spice)
                     w_xyt = w_spice.dropaxis(2)
                     w_xyt.wcs.pc[2, 0] = 0
                     w_xy = w_xyt.dropaxis(2)
@@ -434,7 +421,7 @@ class PlotFunctions:
 
                 header_spice["NAXIS1"] = data_spice.shape[1]
                 header_spice["NAXIS2"] = data_spice.shape[0]
-                EUIUtil.recenter_crpix_in_header(header_spice)
+                AlignEUIUtil.recenter_crpix_in_header(header_spice)
                 not_nan = np.isnan(data_spice)
                 levels = [np.percentile(data_spice[~not_nan], n) for n in levels_percentile]
 
@@ -488,7 +475,7 @@ class PlotFunctions:
                 max = np.percentile(data_large[~not_nan], 99)
                 norm = ImageNormalize(stretch=LinearStretch(), vmin=np.max((min, 1)), vmax=max)
 
-                longitude, latitude = EUIUtil.extract_EUI_coordinates(header_spice, dsun=False)
+                longitude, latitude = AlignEUIUtil.extract_EUI_coordinates(header_spice, dsun=False)
                 longitude_grid, latitude_grid, dlon, dlat = PlotFits.build_regular_grid(longitude, latitude)
                 dlon = dlon.to("arcsec").value
                 dlat = dlat.to("arcsec").value
@@ -528,9 +515,9 @@ class PlotFunctions:
                 x_spice, y_spice = w_spice.world_to_pixel(longitude_grid, latitude_grid)
                 x_spice_shift, y_spice_shift = w_spice_shift.world_to_pixel(longitude_grid, latitude_grid)
 
-                data_fsi_interp = CommonUtil.interpol2d(data_fsi, x=x_fsi, y=y_fsi, fill=-32762, order=1)
-                data_spice_interp = CommonUtil.interpol2d(data_spice, x=x_spice, y=y_spice, fill=-32762, order=1)
-                data_spice_interp_shift = CommonUtil.interpol2d(data_spice, x=x_spice_shift, y=y_spice_shift,
+                data_fsi_interp = AlignCommonUtil.interpol2d(data_fsi, x=x_fsi, y=y_fsi, fill=-32762, order=1)
+                data_spice_interp = AlignCommonUtil.interpol2d(data_spice, x=x_spice, y=y_spice, fill=-32762, order=1)
+                data_spice_interp_shift = AlignCommonUtil.interpol2d(data_spice, x=x_spice_shift, y=y_spice_shift,
                                                                 fill=-32762,
                                                                 order=1)
 
@@ -538,8 +525,8 @@ class PlotFunctions:
                 data_spice_interp = np.where(data_spice_interp == -32762, np.nan, data_spice_interp)
                 data_spice_interp_shift = np.where(data_spice_interp_shift == -32762, np.nan, data_spice_interp_shift)
 
-                longitude_grid_arc = CommonUtil.ang2pipi(longitude_grid.to("arcsec")).value
-                latitude_grid_arc = CommonUtil.ang2pipi(latitude_grid.to("arcsec")).value
+                longitude_grid_arc = AlignCommonUtil.ang2pipi(longitude_grid.to("arcsec")).value
+                latitude_grid_arc = AlignCommonUtil.ang2pipi(latitude_grid.to("arcsec")).value
                 dlon = longitude_grid_arc[0, 1] - longitude_grid_arc[0, 0]
                 dlat = latitude_grid_arc[1, 0] - latitude_grid_arc[0, 0]
 

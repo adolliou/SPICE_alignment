@@ -14,7 +14,7 @@ from astropy.visualization import ImageNormalize, AsymmetricPercentileInterval, 
 from multiprocess.shared_memory import SharedMemory
 
 
-class CommonUtil:
+class AlignCommonUtil:
 
     @staticmethod
     def find_closest_dict_index(utc_to_find, dict_file_reference, threshold_time, time_delay=False,
@@ -104,9 +104,9 @@ class CommonUtil:
                 hdu = hdul[window]
                 hdr = hdu.header
                 if ("EUI" in hdr["TELESCOP"]) or ("AIA" in hdr["TELESCOP"]):
-                    EUIUtil.recenter_crpix_in_header(hdul[window].header)
+                    AlignEUIUtil.recenter_crpix_in_header(hdul[window].header)
                 elif "SPICE" in hdr["TELESCOP"]:
-                    SpiceUtil.recenter_crpix_in_header_L2(hdul[window].header)
+                    AlignSpiceUtil.recenter_crpix_in_header_L2(hdul[window].header)
                 else:
                     raise NotImplementedError
 
@@ -156,7 +156,7 @@ class CommonUtil:
             hdul.close()
 
 
-class EUIUtil:
+class AlignEUIUtil:
     @staticmethod
     def extract_EUI_coordinates(hdr, dsun=True):
         w = WCS(hdr)
@@ -168,10 +168,10 @@ class EUIUtil:
         longitude, latitude = w.pixel_to_world(x, y)
         if dsun:
             dsun_obs_large = hdr["DSUN_OBS"]
-            return CommonUtil.ang2pipi(longitude), \
-                CommonUtil.ang2pipi(latitude), dsun_obs_large
+            return AlignCommonUtil.ang2pipi(longitude), \
+                AlignCommonUtil.ang2pipi(latitude), dsun_obs_large
         else:
-            return CommonUtil.ang2pipi(longitude), CommonUtil.ang2pipi(latitude)
+            return AlignCommonUtil.ang2pipi(longitude), AlignCommonUtil.ang2pipi(latitude)
 
     @staticmethod
     def diff_rot(lat, wvl='default'):
@@ -237,7 +237,7 @@ class EUIUtil:
         with fits.open(path_eui_l2_input) as hdul:
             # hdu = hdul[window_spice]
             # hdr_shifted = hdu.header
-            SpiceUtil.recenter_crpix_in_header_L2(hdul[window_eui].header)
+            AlignSpiceUtil.recenter_crpix_in_header_L2(hdul[window_eui].header)
             change_pcij = False
             if lag_crval1 is not None:
                 hdul[window_eui].header['CRVAL1'] = hdul[window_eui].header['CRVAL1'
@@ -286,7 +286,7 @@ class EUIUtil:
         hdul.close()
 
 
-class SpiceUtil:
+class AlignSpiceUtil:
 
     @staticmethod
     def slit_pxl(header):
@@ -310,7 +310,7 @@ class SpiceUtil:
 
     @staticmethod
     def vertical_edges_limits(header):
-        iymin, iymax = SpiceUtil.slit_pxl(header)
+        iymin, iymax = AlignSpiceUtil.slit_pxl(header)
         iymin += int(20 / header['NBIN2'])
         iymax -= int(20 / header['NBIN2'])
         return iymin, iymax
@@ -457,7 +457,7 @@ class SpiceUtil:
             for window_spice in window_spice_list:
                 # hdu = hdul[window_spice]
                 # hdr_shifted = hdu.header
-                SpiceUtil.recenter_crpix_in_header_L2(hdul[window_spice].header)
+                AlignSpiceUtil.recenter_crpix_in_header_L2(hdul[window_spice].header)
                 change_pcij = False
                 if lag_crval1 is not None:
                     hdul[window_spice].header['CRVAL1'] = hdul[window_spice].header['CRVAL1'
@@ -573,14 +573,14 @@ class PlotFits:
     def simple_plot(hdr_main, data_main, path_save=None, show=True, ax=None, fig=None, norm=None,
                     show_xlabel=True, show_ylabel=True, plot_colorbar=True):
 
-        longitude, latitude, dsun = EUIUtil.extract_EUI_coordinates(hdr_main)
+        longitude, latitude, dsun = AlignEUIUtil.extract_EUI_coordinates(hdr_main)
         longitude_grid, latitude_grid, dlon, dlat = PlotFits.build_regular_grid(longitude=longitude, latitude=latitude)
 
         dlon = dlon.to("arcsec").value
         dlat = dlat.to("arcsec").value
         w = WCS(hdr_main)
         x, y = w.world_to_pixel(longitude_grid, latitude_grid)
-        image_on_regular_grid = CommonUtil.interpol2d(data_main, x=x, y=y, fill=-32762, order=1)
+        image_on_regular_grid = AlignCommonUtil.interpol2d(data_main, x=x, y=y, fill=-32762, order=1)
         image_on_regular_grid[image_on_regular_grid == -32762] = np.nan
         # dlon = (longitude_grid[1, 1] - longitude_grid[0, 0]).to("arcsec").value
         # dlat = (latitude_grid[1, 1] - latitude_grid[0, 0]).to("arcsec").value
@@ -616,20 +616,20 @@ class PlotFits:
     @staticmethod
     def contour_plot(hdr_main, data_main, hdr_contour, data_contour, path_save=None, show=True, levels=None,
                      ax=None, fig=None, norm=None, show_xlabel=True, show_ylabel=True, plot_colorbar=True):
-        longitude_main, latitude_main, dsun = EUIUtil.extract_EUI_coordinates(hdr_contour)
+        longitude_main, latitude_main, dsun = AlignEUIUtil.extract_EUI_coordinates(hdr_contour)
         longitude_grid, latitude_grid = PlotFits._build_regular_grid(longitude=longitude_main,
                                                                      latitude=latitude_main)
 
         w_xy_main = WCS(hdr_main)
         x_small, y_small = w_xy_main.world_to_pixel(longitude_grid, latitude_grid)
-        image_main_cut = CommonUtil.interpol2d(np.array(data_main,
+        image_main_cut = AlignCommonUtil.interpol2d(np.array(data_main,
                                                         dtype=np.float64), x=x_small, y=y_small,
                                                order=1, fill=-32768)
         image_main_cut[image_main_cut == -32768] = np.nan
 
         w_xy_contour = WCS(hdr_contour)
         x_contour, y_contour = w_xy_contour.world_to_pixel(longitude_grid, latitude_grid)
-        image_contour_cut = CommonUtil.interpol2d(np.array(data_contour, dtype=np.float64),
+        image_contour_cut = AlignCommonUtil.interpol2d(np.array(data_contour, dtype=np.float64),
                                                   x=x_contour, y=y_contour,
                                                   order=1, fill=-32768)
         image_contour_cut[image_contour_cut == -32768] = np.nan
@@ -703,15 +703,15 @@ class PlotFits:
         # breakpoint()
         dlon = np.abs((longitude[0, 1] - longitude[0, 0]).to("deg").value)
         dlat = np.abs((latitude[1, 0] - latitude[0, 0]).to("deg").value)
-        longitude1D = np.arange(np.min(CommonUtil.ang2pipi(longitude).to(u.deg).value),
-                                np.max(CommonUtil.ang2pipi(longitude).to(u.deg).value), dlon)
-        latitude1D = np.arange(np.min(CommonUtil.ang2pipi(latitude).to(u.deg).value),
-                               np.max(CommonUtil.ang2pipi(latitude).to(u.deg).value), dlat)
+        longitude1D = np.arange(np.min(AlignCommonUtil.ang2pipi(longitude).to(u.deg).value),
+                                np.max(AlignCommonUtil.ang2pipi(longitude).to(u.deg).value), dlon)
+        latitude1D = np.arange(np.min(AlignCommonUtil.ang2pipi(latitude).to(u.deg).value),
+                               np.max(AlignCommonUtil.ang2pipi(latitude).to(u.deg).value), dlat)
         if (lonlims is not None) or (latlims is not None):
-            longitude1D = longitude1D[(longitude1D > CommonUtil.ang2pipi(lonlims[0]).to("deg").value) &
-                                      (longitude1D < CommonUtil.ang2pipi(lonlims[1]).to("deg").value)]
-            latitude1D = latitude1D[(latitude1D > CommonUtil.ang2pipi(latlims[0]).to("deg").value) &
-                                    (latitude1D < CommonUtil.ang2pipi(latlims[1]).to("deg").value)]
+            longitude1D = longitude1D[(longitude1D > AlignCommonUtil.ang2pipi(lonlims[0]).to("deg").value) &
+                                      (longitude1D < AlignCommonUtil.ang2pipi(lonlims[1]).to("deg").value)]
+            latitude1D = latitude1D[(latitude1D > AlignCommonUtil.ang2pipi(latlims[0]).to("deg").value) &
+                                    (latitude1D < AlignCommonUtil.ang2pipi(latlims[1]).to("deg").value)]
         longitude_grid, latitude_grid = np.meshgrid(longitude1D, latitude1D)
 
         longitude_grid = longitude_grid * u.deg
@@ -724,14 +724,14 @@ class PlotFits:
     def extend_regular_grid(longitude_grid, latitude_grid, delta_longitude, delta_latitude):
         dlon = np.abs((longitude_grid[1, 1] - longitude_grid[0, 0]).to("deg").value)
         dlat = np.abs((latitude_grid[1, 1] - latitude_grid[0, 0]).to("deg").value)
-        delta_longitude_deg = CommonUtil.ang2pipi(delta_longitude).to("deg").value
-        delta_latitude_deg = CommonUtil.ang2pipi(delta_latitude).to("deg").value
+        delta_longitude_deg = AlignCommonUtil.ang2pipi(delta_longitude).to("deg").value
+        delta_latitude_deg = AlignCommonUtil.ang2pipi(delta_latitude).to("deg").value
 
-        longitude1D = np.arange(np.min(CommonUtil.ang2pipi(longitude_grid).to(u.deg).value - 0.5 * delta_longitude_deg),
-                                np.max(CommonUtil.ang2pipi(longitude_grid).to(u.deg).value) + 0.5 * delta_longitude_deg,
+        longitude1D = np.arange(np.min(AlignCommonUtil.ang2pipi(longitude_grid).to(u.deg).value - 0.5 * delta_longitude_deg),
+                                np.max(AlignCommonUtil.ang2pipi(longitude_grid).to(u.deg).value) + 0.5 * delta_longitude_deg,
                                 dlon)
-        latitude1D = np.arange(np.min(CommonUtil.ang2pipi(latitude_grid).to(u.deg).value - 0.5 * delta_latitude_deg),
-                               np.max(CommonUtil.ang2pipi(latitude_grid).to(u.deg).value) + 0.5 * delta_latitude_deg,
+        latitude1D = np.arange(np.min(AlignCommonUtil.ang2pipi(latitude_grid).to(u.deg).value - 0.5 * delta_latitude_deg),
+                               np.max(AlignCommonUtil.ang2pipi(latitude_grid).to(u.deg).value) + 0.5 * delta_latitude_deg,
                                dlat)
 
         longitude_grid_ext, latitude_grid_ext = np.meshgrid(longitude1D, latitude1D)
