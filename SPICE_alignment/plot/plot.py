@@ -67,7 +67,8 @@ def interpol2d(image, x, y, order=1, fill=0, opencv=False, dst=None):
 
 class PlotFunctions:
     @staticmethod
-    def plot_correlation(corr, lag_dx, lag_dy, lag_drot=None, path_save=None, fig=None, ax=None, show=False,
+    def plot_correlation(corr, lag_dx, lag_dy, lag_drot=None, lag_cdelt1=None, lag_cdelt2=None,
+                         path_save=None, fig=None, ax=None, show=False,
                          lag_dx_label=None, lag_dy_label=None, unit='\'\'', type_plot="xy", ):
 
         max_index = np.unravel_index(np.nanargmax(corr), corr.shape)
@@ -104,7 +105,9 @@ class PlotFunctions:
             textstr = '\n'.join((
                 r'$dx=%.1f$ %s' % (lag_dx[max_index[0]], unit),
                 r'$dy=%.1f$ %s' % (lag_dy[max_index[1]], unit),
-                r'$drota=%.2f$ $^\circ$' % (lag_drot[max_index[4]])))
+                r'$drota=%.2f$ $^\circ$' % (lag_drot[max_index[4]]),
+                r'$cdelt1=%.2f$ $^\circ$' % (lag_cdelt1[max_index[2]]),
+                r'$cdelt2=%.2f$ $^\circ$' % (lag_cdelt2[max_index[3]])))
         else:
             textstr = '\n'.join((
                 r'$\delta CRVAL1=%.2f$ %s' % (lag_dx[max_index[0]], unit),
