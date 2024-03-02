@@ -198,7 +198,7 @@ class Alignment:
         else:
             raise NotImplementedError
 
-    def align_using_carrington(self, lonlims=None, latlims=None, shape=None, size_deg_carrington=None,
+    def align_using_carrington(self,  lonlims=None, latlims=None,  size_deg_carrington=None,shape=None,
                                reference_date=None, method='correlation'):
 
         self.reference_date = reference_date
@@ -217,14 +217,15 @@ class Alignment:
         self._recenter_crpix_in_header(self.hdr_small)
         self.data_small = np.array(f_small[self.small_fov_window].data.copy(), dtype=np.float64)
 
-        if (lonlims is None) and (latlims is None) & (shape is None) & (size_deg_carrington is not None):
+        if (lonlims is None) and (latlims is None) & (size_deg_carrington is not None):
 
-            CRLN_OBS = f_small[self.small_fov_window].header["CRLN_OBS"]
-            CRLT_OBS = f_small[self.small_fov_window].header["CRLT_OBS"]
+            CRLN_OBS = self.hdr_small["CRLN_OBS"]
+            CRLT_OBS = self.hdr_small["CRLT_OBS"]
 
             self.lonlims = [CRLN_OBS - 0.5 * size_deg_carrington[0], CRLN_OBS + 0.5 * size_deg_carrington[0]]
             self.latlims = [CRLT_OBS - 0.5 * size_deg_carrington[1], CRLT_OBS + 0.5 * size_deg_carrington[1]]
-
+            self.shape = [self.hdr_small["NAXIS1"], self.hdr_small["NAXIS2"]]
+            print(f"{self.lonlims=}")
 
         elif (lonlims is not None) and (latlims is not None) & (shape is not None):
 
