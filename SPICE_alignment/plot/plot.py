@@ -67,7 +67,7 @@ def interpol2d(image, x, y, order=1, fill=0, opencv=False, dst=None):
 
 class PlotFunctions:
     @staticmethod
-    def plot_correlation(corr, lag_dx, lag_dy, lag_drot=None, lag_cdelt1=None, lag_cdelt2=None,
+    def plot_correlation(corr, lag_dx, lag_dy, lag_drot=None, lag_cdelta1=None, lag_cdelta2=None,
                          path_save=None, fig=None, ax=None, show=False,
                          lag_dx_label=None, lag_dy_label=None, unit='\'\'', type_plot="xy", ):
 
