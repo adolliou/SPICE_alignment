@@ -9,7 +9,7 @@ import matplotlib.patches as patches
 import cv2
 import scipy
 from astropy.io import fits
-from utils.Util import SpiceUtil, EUIUtil, PlotFits, CommonUtil
+from ..utils.Util import SpiceUtil, EUIUtil, PlotFits, CommonUtil
 from astropy.time import Time
 import os
 from mpl_toolkits.axes_grid1 import make_axes_locatable
