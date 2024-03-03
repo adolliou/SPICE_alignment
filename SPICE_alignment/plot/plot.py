@@ -105,14 +105,18 @@ class PlotFunctions:
             textstr = '\n'.join((
                 r'$dx=%.1f$ %s' % (lag_dx[max_index[0]], unit),
                 r'$dy=%.1f$ %s' % (lag_dy[max_index[1]], unit),
-                r'$drota=%.2f$ $^\circ$' % (lag_drot[max_index[4]])))
+                r'$drota=%.2f$ $^\circ$' % (lag_drot[max_index[4]]),
+                r'max_cc = %.2f' % (np.nanmax(corr))
+            ))
         elif (lag_drot is not None) & (lag_cdelta1 is not None):
             textstr = '\n'.join((
                 r'$dx=%.1f$ %s' % (lag_dx[max_index[0]], unit),
                 r'$dy=%.1f$ %s' % (lag_dy[max_index[1]], unit),
                 r'$drota=%.2f$ $^\circ$' % (lag_drot[max_index[4]]),
                 r'$cdelt1=%.2f$ $^\circ$' % (lag_cdelta1[max_index[2]]),
-                r'$cdelt2=%.2f$ $^\circ$' % (lag_cdelta2[max_index[3]])))
+                r'$cdelt2=%.2f$ $^\circ$' % (lag_cdelta2[max_index[3]]),
+                r'max_cc = %.2f' % (np.nanmax(corr))))
+
         else:
             textstr = '\n'.join((
                 r'$\delta CRVAL1=%.2f$ %s' % (lag_dx[max_index[0]], unit),
