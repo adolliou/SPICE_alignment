@@ -438,8 +438,15 @@ class Alignment:
 
                                                                                           )
         shmm_correlation, data_correlation = Util.MpUtils.gen_shmm(create=False, **self._correlation)
+        shmm_large, data_large = Util.MpUtils.gen_shmm(create=False, **self._large)
+        shmm_small, data_small = Util.MpUtils.gen_shmm(create=False, **self._small)
+
         data_correlation_cp = copy.deepcopy(data_correlation)
         shmm_correlation.close()
+        shmm_large.close()
+        shmm_large.unlink()
+        shmm_small.close()
+        shmm_small.unlink()
         shmm_correlation.unlink()
         return data_correlation_cp
 
