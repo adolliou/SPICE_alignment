@@ -377,7 +377,7 @@ class PlotFunctions:
 
     @staticmethod
     def plot_co_alignment(large_fov_window, large_fov_path, corr,
-                          small_fov_window, small_fov_path, levels_percentile=[0.8],
+                          small_fov_window, small_fov_path, levels_percentile=[85],
                           lag_crval1=None, lag_crval2=None, lag_crota=None, lag_cdelta1=None, lag_cdelta2=None,
                           show=False, results_folder=None, ):
 
