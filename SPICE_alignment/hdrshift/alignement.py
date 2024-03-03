@@ -92,6 +92,11 @@ class Alignment:
 
         self.lock = Lock()
 
+    # def __del__(self):
+
+
+
+
     def _shift_header(self, hdr, **kwargs):
         if 'd_crval1' in kwargs.keys():
             if self.unit_lag == hdr["CUNIT1"]:
@@ -433,7 +438,10 @@ class Alignment:
 
                                                                                           )
         shmm_correlation, data_correlation = Util.MpUtils.gen_shmm(create=False, **self._correlation)
-        return copy.deepcopy(data_correlation)
+        data_correlation_cp = copy.deepcopy(data_correlation)
+        shmm_correlation.close()
+        shmm_correlation.unlink()
+        return data_correlation_cp
 
     def _recenter_crpix_in_header(self, hdr):
         w = WCS(hdr)
