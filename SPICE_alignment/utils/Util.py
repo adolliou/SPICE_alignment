@@ -149,8 +149,8 @@ class AlignCommonUtil:
                     lam = hdul[window].header["CDELT2"] / hdul[window].header["CDELT1"]
                     hdul[window].header["PC1_1"] = np.cos(theta)
                     hdul[window].header["PC2_2"] = np.cos(theta)
-                    hdul[window].header["PC1_2"] = -lam * np.sin(theta)
-                    hdul[window].header["PC2_1"] = (1 / lam) * np.sin(theta)
+                    hdul[window].header["PC1_2"] = lam * np.sin(theta)
+                    hdul[window].header["PC2_1"] = - (1 / lam) * np.sin(theta)
 
             hdul.writeto(path_l2_output, overwrite=True)
             hdul.close()
