@@ -145,6 +145,7 @@ class AlignCommonUtil:
                         hdul[window].header['CUNIT2']).value
                     change_pcij = True
                 if change_pcij:
+                    breakpoint()
                     theta = np.deg2rad(crota)
                     lam = hdul[window].header["CDELT2"] / hdul[window].header["CDELT1"]
                     hdul[window].header["PC1_1"] = np.cos(theta)
