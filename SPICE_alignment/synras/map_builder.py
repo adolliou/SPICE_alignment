@@ -134,8 +134,11 @@ class ComposedMapBuilder(MapBuilder):
                                                      hdr_im["CUNIT2"]).to(self.hdr_composed["CUNIT2"]).value
             lam = self.hdr_composed["CDELT2"] / self.hdr_composed["CDELT1"]
             rho = np.arccos(self.hdr_composed["PC1_1"])
-            self.hdr_composed["PC1_2"] = lam * np.sin(rho)
-            self.hdr_composed["PC2_1"] = -(1 / lam) * np.sin(rho)
+            s = - np.sign(self.hdr_composed["PC1_2"])
+            rho = rho * s
+
+            self.hdr_composed["PC1_2"] = - lam * np.sin(rho)
+            self.hdr_composed["PC2_1"] = (1 / lam) * np.sin(rho)
             self.hdr_composed["CRPIX1"] = (self.data_composed.shape[1] + 1) / 2
             self.hdr_composed["CRPIX2"] = (self.data_composed.shape[0] + 1) / 2
             #

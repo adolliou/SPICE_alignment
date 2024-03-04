@@ -122,6 +122,8 @@ class AlignCommonUtil:
                         hdul[window].header['CUNIT2']).value
                 key_rota = None
                 crota = np.rad2deg(np.arccos(hdul[window].header["PC1_1"]))
+                s = - np.sign(hdul[window].header["PC1_2"])
+                crota = crota * s
                 if "CROTA" in hdul[window].header:
                     key_rota = "CROTA"
                 elif "CROTA2" in hdul[window].header:
@@ -149,8 +151,8 @@ class AlignCommonUtil:
                     lam = hdul[window].header["CDELT2"] / hdul[window].header["CDELT1"]
                     hdul[window].header["PC1_1"] = np.cos(theta)
                     hdul[window].header["PC2_2"] = np.cos(theta)
-                    hdul[window].header["PC1_2"] = lam * np.sin(theta)
-                    hdul[window].header["PC2_1"] = - (1 / lam) * np.sin(theta)
+                    hdul[window].header["PC1_2"] = - lam * np.sin(theta)
+                    hdul[window].header["PC2_1"] = (1 / lam) * np.sin(theta)
 
             hdul.writeto(path_l2_output, overwrite=True)
             hdul.close()

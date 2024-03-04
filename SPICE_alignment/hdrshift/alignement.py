@@ -124,6 +124,8 @@ class Alignment:
             else:
                 if kwargs["d_crota"] != 0.0:
                     crot = np.rad2deg(np.arccos(hdr["PC1_1"]))
+                    s = - np.sign(hdr["PC1_2"])
+                    crot = crot * s
                     hdr["CROTA"] = crot
             crot = self.crota_ref + kwargs["d_crota"]
             # raise NotImplementedError
@@ -132,8 +134,8 @@ class Alignment:
             lam = hdr["CDELT2"] / hdr["CDELT1"]
             hdr["PC1_1"] = np.cos(rho)
             hdr["PC2_2"] = np.cos(rho)
-            hdr["PC1_2"] = lam * np.sin(rho)
-            hdr["PC2_1"] = - (1 / lam) * np.sin(rho)
+            hdr["PC1_2"] = - lam * np.sin(rho)
+            hdr["PC2_1"] = (1 / lam) * np.sin(rho)
 
     def _iteration_step_along_crval2(self, d_crval1, d_cdelta1, d_cdelta2, d_crota, d_solar_r, method: str,
                                      position: tuple, lock=None):
