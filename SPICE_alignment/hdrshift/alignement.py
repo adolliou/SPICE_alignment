@@ -173,7 +173,7 @@ class Alignment:
         shmm_correlation, data_correlation = Util.MpUtils.gen_shmm(create=False, **self._correlation)
         data_correlation[position[0], :, position[1], position[2], position[3], position[4]] = results
         # print(f'{data_correlation[:, :, position[1], position[2], position[3],  position[4]]}')
-
+        shmm_correlation.close()
         lock.release()
         # shmm_large, data_large = Util.MpUtils.gen_shmm(create=False, **self._large)
         # assert self.data_large == data_large
@@ -194,6 +194,8 @@ class Alignment:
                            d_crota=d_crota)
 
         data_small_interp = self.function_to_apply(d_solar_r=d_solar_r, data=data_small, hdr=hdr_small_shft)
+        shmm_small.close()
+
 
         condition_1 = np.ones(len(data_small_interp.ravel()), dtype='bool')
         condition_2 = np.ones(len(data_small_interp.ravel()), dtype='bool')
@@ -209,9 +211,12 @@ class Alignment:
             is_nan = np.array((np.isnan(data_large.ravel(), dtype='bool')
                                | (np.isnan(data_small_interp.ravel(), dtype='bool'))),
                               dtype='bool')
-            return c_correlate.c_correlate(data_large.ravel()[(~is_nan) & (condition_1) & (condition_2)],
+            c = c_correlate.c_correlate(data_large.ravel()[(~is_nan) & (condition_1) & (condition_2)],
                                            data_small_interp.ravel()[(~is_nan) & (condition_1) & (condition_2)],
                                            lags=lag)
+            c  = copy.deepcopy(c)
+            shmm_large.close()
+            return c
 
         elif method == 'residus':
             norm = np.sqrt(data_large.ravel())
