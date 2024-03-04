@@ -185,14 +185,13 @@ class Alignment:
     def _step(self, d_crval2, d_crval1, d_cdelta1, d_cdelta2, d_crota, d_solar_r, method: str, ):
         # print(hdr_small['CRVAL1'])
         # print(self.crval1_ref)
-        shmm_large, data_large = Util.MpUtils.gen_shmm(create=False, **self._large)
-        shmm_small, data_small = Util.MpUtils.gen_shmm(create=False, **self._small)
 
         hdr_small_shft = self.hdr_small.copy()
         self._shift_header(hdr_small_shft, d_crval1=d_crval1, d_crval2=d_crval2,
                            d_cdelta1=d_cdelta1, d_cdelta2=d_cdelta2,
                            d_crota=d_crota)
 
+        shmm_small, data_small = Util.MpUtils.gen_shmm(create=False, **self._small)
         data_small_interp = self.function_to_apply(d_solar_r=d_solar_r, data=data_small, hdr=hdr_small_shft)
         shmm_small.close()
 
@@ -204,6 +203,8 @@ class Alignment:
             condition_1 = np.array(data_small_interp.ravel() > self.small_fov_value_min, dtype='bool')
         if self.small_fov_value_max is not None:
             condition_2 = np.array(data_small_interp.ravel() < self.small_fov_value_max, dtype='bool')
+
+        shmm_large, data_large = Util.MpUtils.gen_shmm(create=False, **self._large)
 
         if method == 'correlation':
 
