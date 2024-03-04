@@ -110,35 +110,36 @@ class Alignment:
             else:
                 hdr['CRVAL2'] = u.Quantity(self.crval2_ref, self.unit_lag).to(hdr["CUNIT2"]).value \
                                 + u.Quantity(kwargs["d_crval2"], self.unit_lag).to(hdr["CUNIT2"]).value
-        if 'd_cdelta1' in kwargs.keys():
-            hdr['CDELT1'] = self.cdelta1_ref + kwargs["d_cdelta1"]
-        if 'd_cdelta2' in kwargs.keys():
-            hdr['CDELT2'] = self.cdelta2_ref + kwargs["d_cdelta2"]
-        if 'd_crota' in kwargs.keys():
-            if 'CROTA' in hdr:
-                hdr['CROTA'] = self.crota_ref + kwargs["d_crota"]
-                # crot = hdr['CROTA']
-            elif 'CROTA2' in hdr:
-                hdr['CROTA2'] = self.crota_ref + kwargs["d_crota"]
-                # crot = hdr['CROTA2']
-            else:
-                if kwargs["d_crota"] != 0.0:
-                    crot = np.rad2deg(np.arccos(hdr["PC1_1"]))
-                    s = - np.sign(hdr["PC1_2"])
-                    crot = crot * s
-                    hdr["CROTA"] = crot
-            crot = self.crota_ref + kwargs["d_crota"]
-            # raise NotImplementedError
-        if ((('d_cdelta1' in kwargs.keys()) or ('d_cdelta2' in kwargs.keys()) or ('d_crota' in kwargs.keys()))):
-            print(f'{self.crota_ref=}')
-            print(f'{crot=}')
-            print(f'{hdr["PC1_2"]=}')
-            rho = np.deg2rad(crot)
-            lam = hdr["CDELT2"] / hdr["CDELT1"]
-            hdr["PC1_1"] = np.cos(rho)
-            hdr["PC2_2"] = np.cos(rho)
-            hdr["PC1_2"] = - lam * np.sin(rho)
-            hdr["PC2_1"] = (1 / lam) * np.sin(rho)
+        # if 'd_cdelta1' in kwargs.keys():
+        #     hdr['CDELT1'] = u.Quantity(self.cdelta1_ref, self.unit_lag) + u.Quantity(kwargs["d_cdelta1"],
+        #                                                                              self.unit_lag).to(hdr["CUNIT1"]).value
+        # if 'd_cdelta2' in kwargs.keys():
+        #     hdr['CDELT2'] = self.cdelta2_ref + kwargs["d_cdelta2"]
+        # if 'd_crota' in kwargs.keys():
+        #     if 'CROTA' in hdr:
+        #         hdr['CROTA'] = self.crota_ref + kwargs["d_crota"]
+        #         # crot = hdr['CROTA']
+        #     elif 'CROTA2' in hdr:
+        #         hdr['CROTA2'] = self.crota_ref + kwargs["d_crota"]
+        #         # crot = hdr['CROTA2']
+        #     else:
+        #         if kwargs["d_crota"] != 0.0:
+        #             crot = np.rad2deg(np.arccos(hdr["PC1_1"]))
+        #             s = - np.sign(hdr["PC1_2"])
+        #             crot = crot * s
+        #             hdr["CROTA"] = crot
+        #     crot = self.crota_ref + kwargs["d_crota"]
+        #     # raise NotImplementedError
+        # if ((('d_cdelta1' in kwargs.keys()) or ('d_cdelta2' in kwargs.keys()) or ('d_crota' in kwargs.keys()))):
+        #     print(f'{self.crota_ref=}')
+        #     print(f'{crot=}')
+        #     print(f'{hdr["PC1_2"]=}')
+        #     rho = np.deg2rad(crot)
+        #     lam = hdr["CDELT2"] / hdr["CDELT1"]
+        #     hdr["PC1_1"] = np.cos(rho)
+        #     hdr["PC2_2"] = np.cos(rho)
+        #     hdr["PC1_2"] = - lam * np.sin(rho)
+        #     hdr["PC2_1"] = (1 / lam) * np.sin(rho)
 
     def _iteration_step_along_crval2(self, d_crval1, d_cdelta1, d_cdelta2, d_crota, d_solar_r, method: str,
                                      position: tuple, lock=None):
