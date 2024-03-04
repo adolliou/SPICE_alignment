@@ -121,38 +121,42 @@ class AlignCommonUtil:
                                                                    "arcsec").to(
                         hdul[window].header['CUNIT2']).value
                 key_rota = None
-                # crota = np.rad2deg(np.arccos(hdul[window].header["PC1_1"]))
-                # s = - np.sign(hdul[window].header["PC1_2"])
-                # crota = crota * s
-                # if "CROTA" in hdul[window].header:
-                #     key_rota = "CROTA"
-                # elif "CROTA2" in hdul[window].header:
-                #     key_rota = "CROTA2"
-                #
-                # if lag_crota is not None:
-                #     crota += lag_crota[max_index[4]]
-                #     if key_rota is not None:
-                #         hdul[window].header[key_rota] = crota
-                #     change_pcij = True
-                #
-                # if lag_cdelta1 is not None:
-                #     hdul[window].header['CDELT1'] = hdul[window].header['CDELT1'] + u.Quantity(lag_cdelta1[max_index[2]],
-                #                                                                                "arcsec").to(
-                #         hdul[window].header['CUNIT1']).value
-                #     change_pcij = True
-                #
-                # if lag_cdelta2 is not None:
-                #     hdul[window].header['CDELT2'] = hdul[window].header['CDELT2'] + u.Quantity(lag_cdelta2[max_index[3]],
-                #                                                                                "arcsec").to(
-                #         hdul[window].header['CUNIT2']).value
-                #     change_pcij = True
-                # if change_pcij:
-                #     theta = np.deg2rad(crota)
-                #     lam = hdul[window].header["CDELT2"] / hdul[window].header["CDELT1"]
-                #     hdul[window].header["PC1_1"] = np.cos(theta)
-                #     hdul[window].header["PC2_2"] = np.cos(theta)
-                #     hdul[window].header["PC1_2"] = - lam * np.sin(theta)
-                #     hdul[window].header["PC2_1"] = (1 / lam) * np.sin(theta)
+
+                if "CROTA" in hdul[window].header:
+                    key_rota = "CROTA"
+                    crota = hdul[window].header[key_rota]
+                elif "CROTA2" in hdul[window].header:
+                    key_rota = "CROTA2"
+                    crota = hdul[window].header[key_rota]
+                else:
+                    crota = np.rad2deg(np.arccos(hdul[window].header["PC1_1"]))
+                    s = - np.sign(hdul[window].header["PC1_2"])
+                    crota = crota * s
+
+                if lag_crota is not None:
+                    crota += lag_crota[max_index[4]]
+                    if key_rota is not None:
+                        hdul[window].header[key_rota] = crota
+                    change_pcij = True
+
+                if lag_cdelta1 is not None:
+                    hdul[window].header['CDELT1'] = hdul[window].header['CDELT1'] + u.Quantity(lag_cdelta1[max_index[2]],
+                                                                                               "arcsec").to(
+                        hdul[window].header['CUNIT1']).value
+                    change_pcij = True
+
+                if lag_cdelta2 is not None:
+                    hdul[window].header['CDELT2'] = hdul[window].header['CDELT2'] + u.Quantity(lag_cdelta2[max_index[3]],
+                                                                                               "arcsec").to(
+                        hdul[window].header['CUNIT2']).value
+                    change_pcij = True
+                if change_pcij:
+                    theta = np.deg2rad(crota)
+                    lam = hdul[window].header["CDELT2"] / hdul[window].header["CDELT1"]
+                    hdul[window].header["PC1_1"] = np.cos(theta)
+                    hdul[window].header["PC2_2"] = np.cos(theta)
+                    hdul[window].header["PC1_2"] = - lam * np.sin(theta)
+                    hdul[window].header["PC2_1"] = (1 / lam) * np.sin(theta)
 
             hdul.writeto(path_l2_output, overwrite=True)
             hdul.close()
