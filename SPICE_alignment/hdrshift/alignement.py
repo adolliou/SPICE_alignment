@@ -132,7 +132,7 @@ class Alignment:
         if ((('d_cdelta1' in kwargs.keys()) or ('d_cdelta2' in kwargs.keys()) or ('d_crota' in kwargs.keys()))):
             print(f'{self.crota_ref=}')
             print(f'{crot=}')
-
+            print(f'{hdr["PC1_2"]=}')
             rho = np.deg2rad(crot)
             lam = hdr["CDELT2"] / hdr["CDELT1"]
             hdr["PC1_1"] = np.cos(rho)
