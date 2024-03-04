@@ -364,6 +364,7 @@ class Alignment:
         shmm_correlation, data_correlation = Util.MpUtils.gen_shmm(create=True, ndarray=results)
         self._correlation = {"name": shmm_correlation.name, "size": data_correlation.size,
                              "shape": data_correlation.shape}
+        shmm_correlation.close()
         del results
 
         if self.parallelism:
@@ -418,10 +419,12 @@ class Alignment:
                 for sublist in len_processes_split:
                     if len(sublist) > 0:
                         for index_processes in sublist:
+
                             Processes[index_processes].start()
                         #
                         for ff, index_processes in enumerate(sublist):
                             # print(f'Start process #{ff}')
+                            Processes[index_processes].terminate()
                             Processes[index_processes].join()
                 # pool = mp.Pool(count)
                 # results[:, :, ii, ll, jj, kk] = pool.map(partial(self._iteration_step_along_crval2,
