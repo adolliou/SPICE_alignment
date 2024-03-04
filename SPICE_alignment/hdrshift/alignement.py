@@ -113,14 +113,14 @@ class Alignment:
         if ('d_cdelta1' in kwargs.keys()):
             if kwargs["d_cdelta1"] != 0.0:
                 change_pcij = True
-                hdr['CDELT1'] = u.Quantity(self.cdelta1_ref, self.unit_lag) + u.Quantity(kwargs["d_cdelta1"],
-                                                                                         self.unit_lag).to(
-                    hdr["CUNIT1"]).value
+                hdr['CDELT1'] = (u.Quantity(self.cdelta1_ref, self.unit_lag)
+                                 + u.Quantity(kwargs["d_cdelta1"], self.unit_lag))
         if 'd_cdelta2' in kwargs.keys():
             if kwargs["d_cdelta2"] != 0.0:
                 change_pcij = True
 
-                hdr['CDELT2'] = self.cdelta2_ref + kwargs["d_cdelta2"]
+                hdr['CDELT2'] = (u.Quantity(self.cdelta2_ref, self.unit_lag)
+                                 + u.Quantity(kwargs["d_cdelta2"], self.unit_lag))
         if 'd_crota' in kwargs.keys():
             if kwargs["d_crota"] != 0.0:
                 change_pcij = True
