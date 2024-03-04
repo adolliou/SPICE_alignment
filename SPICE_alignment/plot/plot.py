@@ -400,28 +400,32 @@ class PlotFunctions:
             header_large = hdul_large[large_fov_window].header.copy()
             data_large = hdul_large[large_fov_window].data.copy()
             with fits.open(small_fov_path) as hdul_spice:
-                header_spice = hdul_spice[small_fov_window].header.copy()
+                header_spice_original = hdul_spice[small_fov_window].header.copy()
 
-                if "HRI_EUV" in  header_spice["TELESCOP"]:
-                    AlignEUIUtil.recenter_crpix_in_header(header_spice)
-                    w_xy = WCS(header_spice)
+                if "HRI_EUV" in  header_spice_original["TELESCOP"]:
+                    # AlignEUIUtil.recenter_crpix_in_header(header_spice)
+                    w_xy = WCS(header_spice_original)
                     header_spice = w_xy.to_header().copy()
                     data_spice = np.array(hdul_spice[small_fov_window].data.copy(), dtype=np.float64)
-                elif  "SPICE" in header_spice["TELESCOP"]:
-                    AlignSpiceUtil.recenter_crpix_in_header_L2(header_spice)
-                    w_spice = WCS(header_spice)
-                    ymin, ymax = AlignSpiceUtil.vertical_edges_limits(header_spice)
+                elif  "SPICE" in header_spice_original["TELESCOP"]:
+                    # AlignSpiceUtil.recenter_crpix_in_header_L2(header_spice)
+                    w_spice = WCS(header_spice_original)
+                    ymin, ymax = AlignSpiceUtil.vertical_edges_limits(header_spice_original)
                     w_xyt = w_spice.dropaxis(2)
                     w_xyt.wcs.pc[2, 0] = 0
                     w_xy = w_xyt.dropaxis(2)
                     header_spice = w_xy.to_header().copy()
 
                     data_small = np.array(hdul_spice[small_fov_window].data.copy(), dtype=np.float64)
-                    ylen = data_small.shape[2]
-                    ylim = np.array([ymin, ylen - ymax - 1]).max()
-                    data_spice = np.nansum(data_small[0, :, ylim:(ylen - ylim), :], axis=0)
-                    header_spice["CRPIX1"] = (data_spice.shape[1] + 1) / 2
-                    header_spice["CRPIX2"] = (data_spice.shape[0] + 1) / 2
+                    data_small[:, :, :ymin, :] = np.nan
+                    data_small[:, :, ymax:, :] = np.nan
+
+                    data_spice = np.nansum(data_small[0, :, :, :], axis=0)
+                    data_spice[:ymin, :] = np.nan
+                    data_spice[ymax:, :] = np.nan
+
+                    # header_spice["CRPIX1"] = (data_spice.shape[1] + 1) / 2
+                    # header_spice["CRPIX2"] = (data_spice.shape[0] + 1) / 2
 
 
 
@@ -433,11 +437,15 @@ class PlotFunctions:
 
                 header_spice["NAXIS1"] = data_spice.shape[1]
                 header_spice["NAXIS2"] = data_spice.shape[0]
-                AlignEUIUtil.recenter_crpix_in_header(header_spice)
+                # AlignEUIUtil.recenter_crpix_in_header(header_spice)
                 not_nan = np.isnan(data_spice)
                 levels = [np.percentile(data_spice[~not_nan], n) for n in levels_percentile]
 
                 hdr_spice_shifted = header_spice.copy()
+                if header_spice_original["PC1_1"] == 1.0:
+                    for i, j in zip([1, 1, 2, 2], [1, 2, 1, 2]):
+                        hdr_spice_shifted[f'PC{i}_{j}'] = header_spice_original[f'PC{i}_{j}']
+
                 hdr_spice_shifted["CRVAL1"] = hdr_spice_shifted["CRVAL1"] \
                                               + u.Quantity(parameter_alignment['crval1'][max_index[0]], "arcsec").to(
                     hdr_spice_shifted["CUNIT1"]).value
@@ -451,6 +459,7 @@ class PlotFunctions:
                     key_rota = "CROTA"
                 elif "CROTA2" in hdr_spice_shifted:
                     key_rota = "CROTA2"
+
                 crota = np.rad2deg(np.arccos(copy.deepcopy(hdr_spice_shifted["PC1_1"])))
 
                 if parameter_alignment['crota'] is not None:
@@ -488,7 +497,7 @@ class PlotFunctions:
                 max = np.percentile(data_large[~not_nan], 99)
                 norm = ImageNormalize(stretch=LinearStretch(), vmin=np.max((min, 1)), vmax=max)
 
-                longitude, latitude = AlignEUIUtil.extract_EUI_coordinates(header_spice, dsun=False)
+                longitude, latitude = AlignEUIUtil.extract_EUI_coordinates(header_spice.copy(), dsun=False)
                 longitude_grid, latitude_grid, dlon, dlat = PlotFits.build_regular_grid(longitude, latitude)
                 dlon = dlon.to("arcsec").value
                 dlat = dlat.to("arcsec").value

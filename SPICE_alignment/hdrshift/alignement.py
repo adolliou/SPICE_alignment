@@ -231,10 +231,10 @@ class Alignment:
 
         self.data_large = np.array(f_large[self.large_fov_window].data.copy(), dtype=np.float64)
         self.hdr_large = f_large[self.large_fov_window].header.copy()
-        self._recenter_crpix_in_header(self.hdr_large)
+        # self._recenter_crpix_in_header(self.hdr_large)
 
         self.hdr_small = f_small[self.small_fov_window].header.copy()
-        self._recenter_crpix_in_header(self.hdr_small)
+        # self._recenter_crpix_in_header(self.hdr_small)
         self.data_small = np.array(f_small[self.small_fov_window].data.copy(), dtype=np.float64)
 
         if (lonlims is None) and (latlims is None) & (size_deg_carrington is not None):
@@ -276,10 +276,10 @@ class Alignment:
         self.data_large = dat_large_var
 
         self.hdr_large = f_large[self.large_fov_window].header.copy()
-        self._recenter_crpix_in_header(self.hdr_large)
+        # self._recenter_crpix_in_header(self.hdr_large)
 
         self.hdr_small = f_small[self.small_fov_window].header.copy()
-        self._recenter_crpix_in_header(self.hdr_small)
+        # self._recenter_crpix_in_header(self.hdr_small)
         self.data_small = np.array(f_small[self.small_fov_window].data.copy(), dtype=np.float64)
         f_large.close()
         f_small.close()
@@ -292,28 +292,28 @@ class Alignment:
 
         naxis1, naxis2 = self._get_naxis(self.hdr_large)
 
-        if (self.hdr_large["CRPIX1"] != (naxis1 + 1) / 2) or (self.hdr_large["CRPIX2"] != (naxis2 + 1) / 2):
-            crpix1_old = self.hdr_large["CRPIX1"]
-            crpix2_old = self.hdr_large["CRPIX2"]
-            self._recenter_crpix_in_header(self.hdr_large)
-            crpix1_new = self.hdr_large["CRPIX1"]
-            crpix2_new = self.hdr_large["CRPIX2"]
-            warnings.warn(f"in hdr_large : CRPIX1 or 2 not in center of FOV."
-                          f"\nReplacing CRPIX1 from {crpix1_old} to {crpix1_new}"
-                          f"\nReplacing CRPIX2 from {crpix2_old} to {crpix2_new}")
+        # if (self.hdr_large["CRPIX1"] != (naxis1 + 1) / 2) or (self.hdr_large["CRPIX2"] != (naxis2 + 1) / 2):
+        #     crpix1_old = self.hdr_large["CRPIX1"]
+        #     crpix2_old = self.hdr_large["CRPIX2"]
+        #     self._recenter_crpix_in_header(self.hdr_large)
+        #     crpix1_new = self.hdr_large["CRPIX1"]
+        #     crpix2_new = self.hdr_large["CRPIX2"]
+        #     warnings.warn(f"in hdr_large : CRPIX1 or 2 not in center of FOV."
+        #                   f"\nReplacing CRPIX1 from {crpix1_old} to {crpix1_new}"
+        #                   f"\nReplacing CRPIX2 from {crpix2_old} to {crpix2_new}")
 
         naxis1, naxis2 = self._get_naxis(self.hdr_small)
 
-        if (self.hdr_small["CRPIX1"] != (naxis1 + 1) / 2) or (self.hdr_small["CRPIX2"] != (naxis2 + 1) / 2):
-            crpix1_old = self.hdr_small["CRPIX1"]
-            crpix2_old = self.hdr_small["CRPIX2"]
-            self._recenter_crpix_in_header(self.hdr_small)
-            crpix1_new = self.hdr_small["CRPIX1"]
-            crpix2_new = self.hdr_small["CRPIX2"]
-
-            warnings.warn(f"in hdr_small : CRPIX1 or 2 not in center of FOV."
-                          f"\nReplacing CRPIX1 from {crpix1_old} to {crpix1_new}"
-                          f"\nReplacing CRPIX2 from {crpix2_old} to {crpix2_new}")
+        # if (self.hdr_small["CRPIX1"] != (naxis1 + 1) / 2) or (self.hdr_small["CRPIX2"] != (naxis2 + 1) / 2):
+        #     crpix1_old = self.hdr_small["CRPIX1"]
+        #     crpix2_old = self.hdr_small["CRPIX2"]
+        #     self._recenter_crpix_in_header(self.hdr_small)
+        #     crpix1_new = self.hdr_small["CRPIX1"]
+        #     crpix2_new = self.hdr_small["CRPIX2"]
+        #
+        #     warnings.warn(f"in hdr_small : CRPIX1 or 2 not in center of FOV."
+        #                   f"\nReplacing CRPIX1 from {crpix1_old} to {crpix1_new}"
+        #                   f"\nReplacing CRPIX2 from {crpix2_old} to {crpix2_new}")
 
         self.crval1_ref = self.hdr_small['CRVAL1']
         self.crval2_ref = self.hdr_small['CRVAL2']
@@ -333,10 +333,10 @@ class Alignment:
         self.unit1 = self.hdr_small["CUNIT1"]
         self.unit2 = self.hdr_small["CUNIT2"]
 
-        if (self.hdr_large["CRPIX1"] !=
-            (self.hdr_large["NAXIS1"] + 1) / 2) or (self.hdr_large["CRPIX2"] !=
-                                                    (self.hdr_large["NAXIS2"] + 1) / 2):
-            raise ValueError("in hdr_large : CRPIX1 or 2 not in center of FOV")
+        # if (self.hdr_large["CRPIX1"] !=
+        #     (self.hdr_large["NAXIS1"] + 1) / 2) or (self.hdr_large["CRPIX2"] !=
+        #                                             (self.hdr_large["NAXIS2"] + 1) / 2):
+        #     raise ValueError("in hdr_large : CRPIX1 or 2 not in center of FOV")
 
         if "arcsec" in self.unit1:
             warnings.warn("Unit of headers in arcsec : must provide arcsec units for dcrval")
@@ -466,20 +466,20 @@ class Alignment:
         shmm_correlation.unlink()
         return data_correlation_cp
 
-    def _recenter_crpix_in_header(self, hdr):
-        w = WCS(hdr)
-        naxis1, naxis2 = self._get_naxis(hdr)
-        x_mid = (naxis1 - 1) / 2
-        y_mid = (naxis2 - 1) / 2
-        lon_mid, lat_mid = w.pixel_to_world(np.array([x_mid]), np.array([y_mid]))
-        lon_mid = lon_mid[0].to(hdr["CUNIT1"]).value
-        lat_mid = lat_mid[0].to(hdr["CUNIT2"]).value
-        hdr["CRVAL1"] = lon_mid
-        hdr["CRVAL2"] = lat_mid
-        hdr["CRPIX1"] = (naxis1 + 1) / 2
-        hdr["CRPIX2"] = (naxis2 + 1) / 2
-
-        return hdr
+    # def _recenter_crpix_in_header(self, hdr):
+    #     w = WCS(hdr)
+    #     naxis1, naxis2 = self._get_naxis(hdr)
+    #     x_mid = (naxis1 - 1) / 2
+    #     y_mid = (naxis2 - 1) / 2
+    #     lon_mid, lat_mid = w.pixel_to_world(np.array([x_mid]), np.array([y_mid]))
+    #     lon_mid = lon_mid[0].to(hdr["CUNIT1"]).value
+    #     lat_mid = lat_mid[0].to(hdr["CUNIT2"]).value
+    #     hdr["CRVAL1"] = lon_mid
+    #     hdr["CRVAL2"] = lat_mid
+    #     hdr["CRPIX1"] = (naxis1 + 1) / 2
+    #     hdr["CRPIX2"] = (naxis2 + 1) / 2
+    #
+    #     return hdr
 
     def _carrington_transform(self, d_solar_r, data, hdr):
 

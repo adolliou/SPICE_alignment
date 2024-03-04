@@ -103,12 +103,12 @@ class AlignCommonUtil:
 
                 hdu = hdul[window]
                 hdr = hdu.header
-                if ("EUI" in hdr["TELESCOP"]) or ("AIA" in hdr["TELESCOP"]):
-                    AlignEUIUtil.recenter_crpix_in_header(hdul[window].header)
-                elif "SPICE" in hdr["TELESCOP"]:
-                    AlignSpiceUtil.recenter_crpix_in_header_L2(hdul[window].header)
-                else:
-                    raise NotImplementedError
+                # if ("EUI" in hdr["TELESCOP"]) or ("AIA" in hdr["TELESCOP"]):
+                #     AlignEUIUtil.recenter_crpix_in_header(hdul[window].header)
+                # elif "SPICE" in hdr["TELESCOP"]:
+                #     AlignSpiceUtil.recenter_crpix_in_header_L2(hdul[window].header)
+                # else:
+                #     raise NotImplementedError
 
                 change_pcij = False
                 if lag_crval1 is not None:
@@ -215,22 +215,23 @@ class AlignEUIUtil:
 
     @staticmethod
     def recenter_crpix_in_header(hdr):
-        w = WCS(hdr)
-        if "ZNAXIS1" in hdr:
-            naxis1 = hdr["ZNAXIS1"]
-            naxis2 = hdr["ZNAXIS2"]
-        else:
-            naxis1 = hdr["NAXIS1"]
-            naxis2 = hdr["NAXIS2"]
-        x_mid = (naxis1 - 1) / 2
-        y_mid = (naxis2 - 1) / 2
-        lon_mid, lat_mid = w.pixel_to_world(np.array([x_mid]), np.array([y_mid]))
-        lon_mid = lon_mid[0].to(hdr["CUNIT1"]).value
-        lat_mid = lat_mid[0].to(hdr["CUNIT2"]).value
-        hdr["CRVAL1"] = lon_mid
-        hdr["CRVAL2"] = lat_mid
-        hdr["CRPIX1"] = (naxis1 + 1) / 2
-        hdr["CRPIX2"] = (naxis2 + 1) / 2
+        pass
+        # w = WCS(hdr)
+        # if "ZNAXIS1" in hdr:
+        #     naxis1 = hdr["ZNAXIS1"]
+        #     naxis2 = hdr["ZNAXIS2"]
+        # else:
+        #     naxis1 = hdr["NAXIS1"]
+        #     naxis2 = hdr["NAXIS2"]
+        # x_mid = (naxis1 - 1) / 2
+        # y_mid = (naxis2 - 1) / 2
+        # lon_mid, lat_mid = w.pixel_to_world(np.array([x_mid]), np.array([y_mid]))
+        # lon_mid = lon_mid[0].to(hdr["CUNIT1"]).value
+        # lat_mid = lat_mid[0].to(hdr["CUNIT2"]).value
+        # hdr["CRVAL1"] = lon_mid
+        # hdr["CRVAL2"] = lat_mid
+        # hdr["CRPIX1"] = (naxis1 + 1) / 2
+        # hdr["CRPIX2"] = (naxis2 + 1) / 2
 
     @staticmethod
     def write_corrected_fits(path_eui_l2_input: str, window_eui, path_eui_l2_output: str, corr: np.array,
@@ -244,7 +245,7 @@ class AlignEUIUtil:
         with fits.open(path_eui_l2_input) as hdul:
             # hdu = hdul[window_spice]
             # hdr_shifted = hdu.header
-            AlignSpiceUtil.recenter_crpix_in_header_L2(hdul[window_eui].header)
+            # AlignSpiceUtil.recenter_crpix_in_header_L2(hdul[window_eui].header)
             change_pcij = False
             if lag_crval1 is not None:
                 hdul[window_eui].header['CRVAL1'] = hdul[window_eui].header['CRVAL1'
@@ -405,30 +406,34 @@ class AlignSpiceUtil:
 
     @staticmethod
     def recenter_crpix_in_header_L2(hdr):
-        w = WCS(hdr)
-        w_xyt = w.dropaxis(2)
+        pass
+        # w = WCS(hdr)
+        # w_xyt = w.dropaxis(2)
+        #
+        # if "ZNAXIS1" in hdr:
+        #     naxis1 = hdr["ZNAXIS1"]
+        #     naxis2 = hdr["ZNAXIS2"]
+        #     naxis3 = hdr["ZNAXIS3"]
+        # else:
+        #     naxis1 = hdr["NAXIS1"]
+        #     naxis2 = hdr["NAXIS2"]
+        #     naxis3 = hdr["NAXIS3"]
+        #
+        # x_mid = (naxis1 - 1) / 2
+        # y_mid = (naxis2 - 1) / 2
+        # t_mid = (naxis3 - 1) / 2
+        #
+        # lon_mid, lat_mid, utc_mid = w_xyt.pixel_to_world(np.array([x_mid]), np.array([y_mid]), np.array(t_mid))
+        # lon_mid = lon_mid[0].to(hdr["CUNIT1"]).value
+        # lat_mid = lat_mid[0].to(hdr["CUNIT2"]).value
+        #
+        # hdr["CRVAL1"] = lon_mid
+        # hdr["CRVAL2"] = lat_mid
+        # hdr["CRPIX1"] = (naxis1 + 1) / 2
+        # hdr["CRPIX2"] = (naxis2 + 1) / 2
 
-        if "ZNAXIS1" in hdr:
-            naxis1 = hdr["ZNAXIS1"]
-            naxis2 = hdr["ZNAXIS2"]
-            naxis3 = hdr["ZNAXIS3"]
-        else:
-            naxis1 = hdr["NAXIS1"]
-            naxis2 = hdr["NAXIS2"]
-            naxis3 = hdr["NAXIS3"]
 
-        x_mid = (naxis1 - 1) / 2
-        y_mid = (naxis2 - 1) / 2
-        t_mid = (naxis3 - 1) / 2
-
-        lon_mid, lat_mid, utc_mid = w_xyt.pixel_to_world(np.array([x_mid]), np.array([y_mid]), np.array(t_mid))
-        lon_mid = lon_mid[0].to(hdr["CUNIT1"]).value
-        lat_mid = lat_mid[0].to(hdr["CUNIT2"]).value
-
-        hdr["CRVAL1"] = lon_mid
-        hdr["CRVAL2"] = lat_mid
-        hdr["CRPIX1"] = (naxis1 + 1) / 2
-        hdr["CRPIX2"] = (naxis2 + 1) / 2
+        # must also shift the rotation
 
     @staticmethod
     def extract_l3_data(path_spice: str, line: dict, index_line: int, window=0):
@@ -464,7 +469,7 @@ class AlignSpiceUtil:
             for window_spice in window_spice_list:
                 # hdu = hdul[window_spice]
                 # hdr_shifted = hdu.header
-                AlignSpiceUtil.recenter_crpix_in_header_L2(hdul[window_spice].header)
+                # AlignSpiceUtil.recenter_crpix_in_header_L2(hdul[window_spice].header)
                 change_pcij = False
                 if lag_crval1 is not None:
                     hdul[window_spice].header['CRVAL1'] = hdul[window_spice].header['CRVAL1'

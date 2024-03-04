@@ -81,7 +81,7 @@ class AlignmentSpice(Alignment):
         with fits.open(self.large_fov_known_pointing) as hdul_large:
             self.data_large = np.array(hdul_large[self.large_fov_window].data.copy(), dtype=np.float64)
             self.hdr_large = hdul_large[self.large_fov_window].header.copy()
-            super()._recenter_crpix_in_header(self.hdr_large)
+            # super()._recenter_crpix_in_header(self.hdr_large)
             hdul_large.close()
 
     def _extract_spice_data_header(self, level: int, index_amplitude=None):
@@ -145,17 +145,24 @@ class AlignmentSpice(Alignment):
 
         w_xy = w_xyt.dropaxis(2)
         self.hdr_small = w_xy.to_header().copy()
-        self.hdr_small["NAXIS1"] = data_small.shape[3]
-        self.hdr_small["NAXIS2"] = data_small.shape[2]
-        super()._recenter_crpix_in_header(self.hdr_small)
-        ylen = data_small.shape[2]
+        # self.hdr_small["NAXIS1"] = data_small.shape[3]
+        # self.hdr_small["NAXIS2"] = data_small.shape[2]
+        # super()._recenter_crpix_in_header(self.hdr_small)
+        # ylen = data_small.shape[2]
 
-        ylim = np.array([ymin, ylen - ymax - 1]).max()
-        self.data_small = np.nansum(data_small[0, :, ylim:(ylen - ylim), :], axis=0)
+        # ylim = np.array([ymin, ylen - ymax - 1]).max()
+        data_small[:, :, :ymin, :] = np.nan
+        data_small[:, :, ymax:, :] = np.nan
 
-        self.hdr_small["CRPIX1"] = (self.data_small.shape[1] + 1) / 2
-        self.hdr_small["CRPIX2"] = (self.data_small.shape[0] + 1) / 2
+        self.data_small = np.nansum(data_small[0, :, :, :], axis=0)
+        self.data_small[:ymin, :] = np.nan
+        self.data_small[ymax:, :] = np.nan
 
+
+        #
+        # self.hdr_small["CRPIX1"] = (self.data_small.shape[1] + 1) / 2
+        # self.hdr_small["CRPIX2"] = (self.data_small.shape[0] + 1) / 2
+        #
         self.hdr_small["NAXIS1"] = self.data_small.shape[1]
         self.hdr_small["NAXIS2"] = self.data_small.shape[0]
 
