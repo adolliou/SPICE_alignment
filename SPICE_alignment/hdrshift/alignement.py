@@ -389,7 +389,7 @@ class Alignment:
 
                 shmm_correlation.close()
                 shmm_small.close()
-                shmm_large
+                shmm_large.close()
 
                 for ii, d_cdelta1 in enumerate(self.lag_cdelta1):
                     for ll, d_cdelta2 in enumerate(self.lag_cdelta2):
