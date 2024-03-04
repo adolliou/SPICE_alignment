@@ -140,9 +140,9 @@ class Alignment:
             crot = self.crota_ref + kwargs["d_crota"]
             # raise NotImplementedError
         if change_pcij:
-            print(f'{self.crota_ref=}')
-            print(f'{crot=}')
-            print(f'{hdr["PC1_2"]=}')
+            # print(f'{self.crota_ref=}')
+            # print(f'{crot=}')
+            # print(f'{hdr["PC1_2"]=}')
             rho = np.deg2rad(crot)
             lam = hdr["CDELT2"] / hdr["CDELT1"]
             hdr["PC1_1"] = np.cos(rho)
