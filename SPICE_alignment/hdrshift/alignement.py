@@ -387,6 +387,10 @@ class Alignment:
                 self._small = {"name": shmm_small.name, "dtype": data_small.dtype, "shape": data_small.shape}
                 del self.data_small
 
+                shmm_correlation.close()
+                shmm_small.close()
+                shmm_large
+
                 for ii, d_cdelta1 in enumerate(self.lag_cdelta1):
                     for ll, d_cdelta2 in enumerate(self.lag_cdelta2):
                         for jj, d_crota in enumerate(self.lag_crota):
@@ -446,6 +450,8 @@ class Alignment:
                 self._small = {"name": shmm_small.name, "dtype": data_small.dtype, "shape": data_small.shape}
                 self.data_small = None
 
+                shmm_large.close()
+                shmm_small.close()
                 for ii, d_crval1 in enumerate(self.lag_crval1):
                     for jj, d_crval2 in enumerate(tqdm(self.lag_crval2)):
                         for kk, d_cdelta1 in enumerate(self.lag_cdelta1):
