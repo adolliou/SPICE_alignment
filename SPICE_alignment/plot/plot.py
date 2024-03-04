@@ -467,13 +467,13 @@ class PlotFunctions:
                 if parameter_alignment['cdelt1'] is not None:
                     cdelt1 = u.Quantity(hdr_spice_shifted["CDELT1"], hdr_spice_shifted["CUNIT1"]) + \
                                                   u.Quantity(parameter_alignment['cdelt1'][max_index[2]], "arcsec")
-                    hdr_spice_shifted["CDELT1"] = cdelt1.to(hdr_spice_shifted["CUNIT1"]).value
+                    hdr_spice_shifted["CDELT1"] += cdelt1.to(hdr_spice_shifted["CUNIT1"]).value
                     change_pcij = True
 
                 if parameter_alignment['cdelt2'] is not None:
                     cdelt2 = u.Quantity(hdr_spice_shifted["CDELT2"], hdr_spice_shifted["CUNIT2"]) + \
                              u.Quantity(parameter_alignment['cdelt2'][max_index[3]], "arcsec")
-                    hdr_spice_shifted["CDELT2"] = cdelt2.to(hdr_spice_shifted["CUNIT2"]).value
+                    hdr_spice_shifted["CDELT2"] += cdelt2.to(hdr_spice_shifted["CUNIT2"]).value
                     change_pcij = True
                 if change_pcij:
                     s = - np.sign(hdr_spice_shifted["PC1_2"])
