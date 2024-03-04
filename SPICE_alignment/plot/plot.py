@@ -476,7 +476,8 @@ class PlotFunctions:
                     hdr_spice_shifted["CDELT2"] = cdelt2.to(hdr_spice_shifted["CUNIT2"]).value
                     change_pcij = True
                 if change_pcij:
-                    theta = np.deg2rad(crota)
+                    s = - np.sign(hdr_spice_shifted["PC1_2"])
+                    theta = np.deg2rad(crota) * s
                     lam = hdr_spice_shifted["CDELT2"] / hdr_spice_shifted["CDELT1"]
                     hdr_spice_shifted["PC1_1"] = np.cos(theta)
                     hdr_spice_shifted["PC2_2"] = np.cos(theta)
