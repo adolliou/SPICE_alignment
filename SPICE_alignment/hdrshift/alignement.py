@@ -185,16 +185,16 @@ class Alignment:
     def _step(self, d_crval2, d_crval1, d_cdelta1, d_cdelta2, d_crota, d_solar_r, method: str, ):
         # print(hdr_small['CRVAL1'])
         # print(self.crval1_ref)
+        shmm_small, data_small = Util.MpUtils.gen_shmm(create=False, **self._small)
+        shmm_large, data_large = Util.MpUtils.gen_shmm(create=False, **self._large)
 
         hdr_small_shft = self.hdr_small.copy()
         self._shift_header(hdr_small_shft, d_crval1=d_crval1, d_crval2=d_crval2,
                            d_cdelta1=d_cdelta1, d_cdelta2=d_cdelta2,
                            d_crota=d_crota)
 
-        shmm_small, data_small = Util.MpUtils.gen_shmm(create=False, **self._small)
         data_small_interp = self.function_to_apply(d_solar_r=d_solar_r, data=data_small, hdr=hdr_small_shft)
         data_small_interp = copy.deepcopy(data_small_interp)
-        shmm_small.close()
 
 
         condition_1 = np.ones(len(data_small_interp.ravel()), dtype='bool')
@@ -205,7 +205,6 @@ class Alignment:
         if self.small_fov_value_max is not None:
             condition_2 = np.array(data_small_interp.ravel() < self.small_fov_value_max, dtype='bool')
 
-        shmm_large, data_large = Util.MpUtils.gen_shmm(create=False, **self._large)
 
         if method == 'correlation':
 
@@ -217,10 +216,14 @@ class Alignment:
                                            data_small_interp.ravel()[(~is_nan) & (condition_1) & (condition_2)],
                                            lags=lag)
             print(f'{data_large=}')
-            print(f'{data_small_interp=}')
+            l = len(data_small_interp)
+            print(f'{data_small_interp[l//2, l//2]=}')
+            print(f'{c=}')
 
             c  = copy.deepcopy(c)
             shmm_large.close()
+            shmm_small.close()
+
             return c
 
         elif method == 'residus':
