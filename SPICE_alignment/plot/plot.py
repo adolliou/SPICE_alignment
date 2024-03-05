@@ -529,14 +529,18 @@ class PlotFunctions:
                 ax1.set_title(f"{detector} {wave} & Small FOV (contour) not aligned ")
                 ax2.set_title(f"{detector} {wave} & Small FOV (contour) aligned ")
                 ax3.set_title("Small FOV (%s) aligned " % small_fov_window)
-                date = header_spice["DATE-OBS"][:19]
-                fig.suptitle(f"Small FOV {date} aligned with {detector} {wave}")
+                date = Time(hdul_spice[small_fov_window].header["DATE-AVG"]).fits[:19]
+                date = date.replace(":", "_")
+                date = date.replace("-", "_")
+
+                date_str = header_spice["DATE-OBS"][:19]
+                fig.suptitle(f"Small FOV {date_str} aligned with {detector} {wave}")
                 # fig.suptitle("Alignement of SPICE  using a synthetic raster of HRIEUV images")
                 if results_folder is not None:
                     fig.savefig('%s/compare_alignment.pdf' % (results_folder))
                 if show:
                     fig.show()
-                date = Time(hdul_spice[small_fov_window].header["DATE-AVG"]).fits[:19]
+
                 # fig.suptitle(f"Alignement SPICE {date}- HRI 174")
                 w_fsi = WCS(header_fsi)
                 w_spice = WCS(header_spice)
@@ -582,7 +586,7 @@ class PlotFunctions:
                 ax.set_ylabel("Solar-Y [arcsec]")
                 cbar = fig.colorbar(im, label=header_fsi["BUNIT"])
                 if results_folder is not None:
-                    fig.savefig(os.path.join(results_folder, "Synthetic_raster_on_grid.pdf"))
+                    fig.savefig(os.path.join(results_folder, f"Synthetic_raster_on_grid_{date}.pdf"))
                 if show:
                     fig.show()
                 fig = plt.figure(figsize=(5, 5))
@@ -598,7 +602,7 @@ class PlotFunctions:
                 ax.set_title("small FOV not aligned (%s) \n %s" % (small_fov_window, header_spice["DATE-OBS"][:19]))
                 cbar = fig.colorbar(im, label=header_spice["BUNIT"])
                 if results_folder is not None:
-                    fig.savefig(os.path.join(results_folder, "small_fov_before_alignment_on_grid.pdf"))
+                    fig.savefig(os.path.join(results_folder, f"small_fov_before_alignment_on_grid_{date}.pdf"))
                 if show:
                     fig.show()
                 fig = plt.figure(figsize=(5, 5))
@@ -614,7 +618,7 @@ class PlotFunctions:
                 ax.set_ylabel("Solar-Y [arcsec]")
                 cbar = fig.colorbar(im, label=header_spice["BUNIT"], )
                 if results_folder is not None:
-                    fig.savefig(os.path.join(results_folder, "sall_fov_after_alignment_on_grid.pdf"))
+                    fig.savefig(os.path.join(results_folder, f"small_fov_after_alignment_on_grid_{date}.pdf"))
                 if show:
                     fig.show()
                 # fig.savefig(os.path.join(results_folder, "SPICE_after_alignment_on_grid.png"), dpi=150)

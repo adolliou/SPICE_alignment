@@ -454,11 +454,6 @@ class Alignment:
                     for kk, P in zip(range(lenp), Processes):
                         if kk not in is_close:
                             if (not(P.is_alive())) and (kk <= ii):
-                                # print(f'{P.is_alive()=}')
-                                # print(f'{not(P.is_alive())=}')
-                                # print(f'{P.is_alive()=}')
-                                # print(f'{P.is_alive()=}')
-
                                 P.close()
                                 is_close.append(kk)
                                 # Processes.pop(kk)
@@ -466,6 +461,11 @@ class Alignment:
 
                 while (np.sum([p.is_alive() for mm, p in zip(range(lenp), Processes) if (mm not in is_close)]) != 0):
                     pass
+                for kk, P in zip(range(lenp), Processes):
+                    if kk not in is_close:
+                        if (not (P.is_alive())) and (kk <= ii):
+                            P.close()
+                            is_close.append(kk)
                 # for P in Processes:
                 #
                 #     P.join()
