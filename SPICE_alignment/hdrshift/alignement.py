@@ -113,14 +113,16 @@ class Alignment:
         if ('d_cdelta1' in kwargs.keys()):
             if kwargs["d_cdelta1"] != 0.0:
                 change_pcij = True
-                hdr['CDELT1'] = (u.Quantity(self.cdelta1_ref, self.unit_lag)
+                cdelt1 = (u.Quantity(self.cdelta1_ref, self.unit_lag)
                                  + u.Quantity(kwargs["d_cdelta1"], self.unit_lag))
+                hdr['CDELT1'] = cdelt1.to(hdr["CUNIT1"]).value
         if 'd_cdelta2' in kwargs.keys():
             if kwargs["d_cdelta2"] != 0.0:
                 change_pcij = True
 
-                hdr['CDELT2'] = (u.Quantity(self.cdelta2_ref, self.unit_lag)
+                cdelt2 = (u.Quantity(self.cdelta2_ref, self.unit_lag)
                                  + u.Quantity(kwargs["d_cdelta2"], self.unit_lag))
+                hdr['CDELT2']= cdelt2.to(hdr["CUNIT2"]).value
         if 'd_crota' in kwargs.keys():
             if kwargs["d_crota"] != 0.0:
                 change_pcij = True
@@ -171,7 +173,6 @@ class Alignment:
         shmm_correlation, data_correlation = Util.MpUtils.gen_shmm(create=False, **self._correlation)
         data_correlation[position[0], :, position[1], position[2], position[3], position[4]] = results
         # print(f'{data_correlation[:, :, position[1], position[2], position[3],  position[4]]}')
-
         lock.release()
         # shmm_large, data_large = Util.MpUtils.gen_shmm(create=False, **self._large)
         # assert self.data_large == data_large
@@ -183,8 +184,8 @@ class Alignment:
     def _step(self, d_crval2, d_crval1, d_cdelta1, d_cdelta2, d_crota, d_solar_r, method: str, ):
         # print(hdr_small['CRVAL1'])
         # print(self.crval1_ref)
-        shmm_large, data_large = Util.MpUtils.gen_shmm(create=False, **self._large)
         shmm_small, data_small = Util.MpUtils.gen_shmm(create=False, **self._small)
+        shmm_large, data_large = Util.MpUtils.gen_shmm(create=False, **self._large)
 
         hdr_small_shft = self.hdr_small.copy()
         self._shift_header(hdr_small_shft, d_crval1=d_crval1, d_crval2=d_crval2,
@@ -192,6 +193,8 @@ class Alignment:
                            d_crota=d_crota)
 
         data_small_interp = self.function_to_apply(d_solar_r=d_solar_r, data=data_small, hdr=hdr_small_shft)
+        data_small_interp = copy.deepcopy(data_small_interp)
+
 
         condition_1 = np.ones(len(data_small_interp.ravel()), dtype='bool')
         condition_2 = np.ones(len(data_small_interp.ravel()), dtype='bool')
@@ -201,15 +204,26 @@ class Alignment:
         if self.small_fov_value_max is not None:
             condition_2 = np.array(data_small_interp.ravel() < self.small_fov_value_max, dtype='bool')
 
+
         if method == 'correlation':
 
             lag = [0]
             is_nan = np.array((np.isnan(data_large.ravel(), dtype='bool')
                                | (np.isnan(data_small_interp.ravel(), dtype='bool'))),
                               dtype='bool')
-            return c_correlate.c_correlate(data_large.ravel()[(~is_nan) & (condition_1) & (condition_2)],
+            c = c_correlate.c_correlate(data_large.ravel()[(~is_nan) & (condition_1) & (condition_2)],
                                            data_small_interp.ravel()[(~is_nan) & (condition_1) & (condition_2)],
                                            lags=lag)
+            # print(f'{data_large=}')
+            # l = data_small_interp.shape
+            # print(f'{data_small_interp[l[0]//2, l[1]//2]=}')
+            # print(f'{c=}')
+
+            c  = copy.deepcopy(c)
+            shmm_large.close()
+            shmm_small.close()
+
+            return c
 
         elif method == 'residus':
             norm = np.sqrt(data_large.ravel())
@@ -357,6 +371,7 @@ class Alignment:
         shmm_correlation, data_correlation = Util.MpUtils.gen_shmm(create=True, ndarray=results)
         self._correlation = {"name": shmm_correlation.name, "size": data_correlation.size,
                              "shape": data_correlation.shape}
+        shmm_correlation.close()
         del results
 
         if self.parallelism:
@@ -379,6 +394,10 @@ class Alignment:
                 shmm_small, data_small = Util.MpUtils.gen_shmm(create=True, ndarray=copy.deepcopy(self.data_small))
                 self._small = {"name": shmm_small.name, "dtype": data_small.dtype, "shape": data_small.shape}
                 del self.data_small
+
+                shmm_correlation.close()
+                shmm_small.close()
+                shmm_large.close()
 
                 for ii, d_cdelta1 in enumerate(self.lag_cdelta1):
                     for ll, d_cdelta2 in enumerate(self.lag_cdelta2):
@@ -407,10 +426,12 @@ class Alignment:
                 for sublist in len_processes_split:
                     if len(sublist) > 0:
                         for index_processes in sublist:
+
                             Processes[index_processes].start()
                         #
                         for ff, index_processes in enumerate(sublist):
                             # print(f'Start process #{ff}')
+                            Processes[index_processes].terminate()
                             Processes[index_processes].join()
                 # pool = mp.Pool(count)
                 # results[:, :, ii, ll, jj, kk] = pool.map(partial(self._iteration_step_along_crval2,
@@ -439,6 +460,8 @@ class Alignment:
                 self._small = {"name": shmm_small.name, "dtype": data_small.dtype, "shape": data_small.shape}
                 self.data_small = None
 
+                shmm_large.close()
+                shmm_small.close()
                 for ii, d_crval1 in enumerate(self.lag_crval1):
                     for jj, d_crval2 in enumerate(tqdm(self.lag_crval2)):
                         for kk, d_cdelta1 in enumerate(self.lag_cdelta1):
