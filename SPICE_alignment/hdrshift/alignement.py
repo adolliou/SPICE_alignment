@@ -193,6 +193,7 @@ class Alignment:
 
         shmm_small, data_small = Util.MpUtils.gen_shmm(create=False, **self._small)
         data_small_interp = self.function_to_apply(d_solar_r=d_solar_r, data=data_small, hdr=hdr_small_shft)
+        data_small_interp = copy.deepcopy(data_small_interp)
         shmm_small.close()
 
 
@@ -215,6 +216,9 @@ class Alignment:
             c = c_correlate.c_correlate(data_large.ravel()[(~is_nan) & (condition_1) & (condition_2)],
                                            data_small_interp.ravel()[(~is_nan) & (condition_1) & (condition_2)],
                                            lags=lag)
+            print(f'{data_large=}')
+            print(f'{data_small_interp=}')
+
             c  = copy.deepcopy(c)
             shmm_large.close()
             return c
