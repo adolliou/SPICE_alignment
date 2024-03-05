@@ -447,8 +447,13 @@ class Alignment:
                     ii += 1
                     Processes[ii].start()
                     while (np.sum([p.is_alive() for p in Processes]) > self.counts):
-                        [p.terminate() for kk, p in zip(range(lenp), Processes) if ((~(p.is_alive()) and kk <= ii))]
+
+                        # [p.terminate() for kk, p in zip(range(lenp), Processes) if ((~(p.is_alive()) and kk <= ii))]
                         pass
+                    for kk, P in zip(range(lenp), Processes):
+                        if (~P.is_alive()) and (kk <= ii):
+                            print(f'{P.is_alive()=}')
+                            P.close()
 
 
                 while (np.sum([p.is_alive() for p in Processes]) != 0):
