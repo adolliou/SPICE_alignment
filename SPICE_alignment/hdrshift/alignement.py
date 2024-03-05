@@ -440,7 +440,7 @@ class Alignment:
                         #
                         for ff, index_processes in enumerate(sublist):
                             # print(f'Start process #{ff}')
-                            Processes[index_processes].terminate()
+                            # Processes[index_processes].terminate()
                             Processes[index_processes].join()
                 # pool = mp.Pool(count)
                 # results[:, :, ii, ll, jj, kk] = pool.map(partial(self._iteration_step_along_crval2,
