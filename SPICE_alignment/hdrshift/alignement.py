@@ -458,6 +458,7 @@ class Alignment:
                             print(f'{P.is_alive()=}')
 
                             P.close()
+                            Processes.pop(kk)
 
 
                 while (np.sum([p.is_alive() for p in Processes]) != 0):
