@@ -157,14 +157,16 @@ class Alignment:
 
         results = np.zeros(len(self.lag_crval2), dtype=np.float64)
         if self.use_tqdm:
-            print(f'je suis là')
             for ii, d_crval2 in enumerate(tqdm(self.lag_crval2, desc='crval1 = %.2f' % (d_crval1))):
                 results[ii] = self._step(d_crval2=d_crval2, d_crval1=d_crval1,
                                          d_cdelta1=d_cdelta1, d_cdelta2=d_cdelta2, d_crota=d_crota,
                                          method=method, d_solar_r=d_solar_r,
                                          )
         else:
+            print(f'je suis là')
+
             for ii, d_crval2 in enumerate(self.lag_crval2):
+                print(f'{ii=}')
                 results[ii] = self._step(d_crval2=d_crval2, d_crval1=d_crval1,
                                          d_cdelta1=d_cdelta1, d_cdelta2=d_cdelta2, d_crota=d_crota,
                                          method=method, d_solar_r=d_solar_r,
