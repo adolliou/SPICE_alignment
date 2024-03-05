@@ -451,8 +451,12 @@ class Alignment:
                         # [p.terminate() for kk, p in zip(range(lenp), Processes) if ((~(p.is_alive()) and kk <= ii))]
                         pass
                     for kk, P in zip(range(lenp), Processes):
-                        if (~P.is_alive()) and (kk <= ii):
+                        if (not(P.is_alive())) and (kk <= ii):
                             print(f'{P.is_alive()=}')
+                            print(f'{not(P.is_alive())=}')
+                            print(f'{P.is_alive()=}')
+                            print(f'{P.is_alive()=}')
+
                             P.close()
 
 
