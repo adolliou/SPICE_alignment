@@ -178,7 +178,6 @@ class Alignment:
 
         lock.acquire()
         shmm_correlation, data_correlation = Util.MpUtils.gen_shmm(create=False, **self._correlation)
-        print(f'{results=}')
         data_correlation[position[0], :, position[1], position[2], position[3], position[4]] = results
         # print(f'{data_correlation[:, :, position[1], position[2], position[3],  position[4]]}')
         lock.release()
