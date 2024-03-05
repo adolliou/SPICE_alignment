@@ -157,6 +157,7 @@ class Alignment:
 
         results = np.zeros(len(self.lag_crval2), dtype=np.float64)
         if self.use_tqdm:
+            print(f'je suis là')
             for ii, d_crval2 in enumerate(tqdm(self.lag_crval2, desc='crval1 = %.2f' % (d_crval1))):
                 results[ii] = self._step(d_crval2=d_crval2, d_crval1=d_crval1,
                                          d_cdelta1=d_cdelta1, d_cdelta2=d_cdelta2, d_crota=d_crota,
@@ -169,6 +170,8 @@ class Alignment:
                                          method=method, d_solar_r=d_solar_r,
                                          )
         # if lock is not None:
+        print(f'je suis ici')
+
         lock.acquire()
         shmm_correlation, data_correlation = Util.MpUtils.gen_shmm(create=False, **self._correlation)
         print(f'{results=}')
