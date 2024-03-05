@@ -443,27 +443,31 @@ class Alignment:
                 #         P.terminate()
                 lenp = len(Processes)
                 ii = -1
+                is_close = []
                 while (ii < lenp - 1):
                     ii += 1
                     Processes[ii].start()
-                    while (np.sum([p.is_alive() for p in Processes]) > self.counts):
+                    while (np.sum([p.is_alive() for mm, p in zip(range(lenp), Processes) if (mm not in is_close)]) > self.counts):
 
                         # [p.terminate() for kk, p in zip(range(lenp), Processes) if ((~(p.is_alive()) and kk <= ii))]
                         pass
                     for kk, P in zip(range(lenp), Processes):
-                        if (not(P.is_alive())) and (kk <= ii):
-                            # print(f'{P.is_alive()=}')
-                            # print(f'{not(P.is_alive())=}')
-                            # print(f'{P.is_alive()=}')
-                            # print(f'{P.is_alive()=}')
+                        if kk not in is_close:
+                            if (not(P.is_alive())) and (kk <= ii):
+                                # print(f'{P.is_alive()=}')
+                                # print(f'{not(P.is_alive())=}')
+                                # print(f'{P.is_alive()=}')
+                                # print(f'{P.is_alive()=}')
 
-                            P.close()
-                            Processes.pop(kk)
+                                P.close()
+                                is_close.append(kk)
+                                # Processes.pop(kk)
 
 
                 while (np.sum([p.is_alive() for p in Processes]) != 0):
                     pass
                 for P in Processes:
+
                     P.join()
 
                 # while (index_processes < len(Processes)):
