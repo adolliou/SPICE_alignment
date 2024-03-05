@@ -436,7 +436,10 @@ class Alignment:
                 index_processes = 0
                 sublists_Processes = [Processes[x:x + self.counts] for x in range(0, len(Processes), self.counts)]
                 for sublist in sublists_Processes:
+                    ii = 0
                     for P in sublist:
+                        print(f'{ii=}')
+                        ii +=1
                         P.start()
                     for P in sublist:
                         P.join()
