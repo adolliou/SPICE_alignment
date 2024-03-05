@@ -429,18 +429,49 @@ class Alignment:
                 if self.counts is None:
                     self.counts = mp.cpu_count()
                 len_processes_split = divide_chunks(l=len_processes, n=self.counts)
+                print(f"{len_processes_split=}")
                 # len_processes_split = np.array_split(len_processes, self.counts)
                 # print(f'{len_processes_split=}')
-                for sublist in len_processes_split:
-                    if len(sublist) > 0:
-                        for index_processes in sublist:
+                len_processes_split_ = []
+                index_processes = 0
+                sublists_Processes = [Processes[x:x + self.counts] for x in range(0, len(Processes), self.counts)]
+                for sublist in sublists_Processes:
+                    for P in sublist:
+                        P.start()
+                    for P in sublist:
+                        P.join()
+                        P.terminate()
 
-                            Processes[index_processes].start()
-                        #
-                        for ff, index_processes in enumerate(sublist):
-                            # print(f'Start process #{ff}')
-                            # Processes[index_processes].terminate()
-                            Processes[index_processes].join()
+
+                # while (index_processes < len(Processes)):
+                #     idx = []
+                #     count = 0s
+                #     A = index_processes
+                #     while (count < self.counts):
+                #         Processes[A + index_processes].start()
+                #         count += 1
+                #         A += 1
+                #     while (count < self.counts):
+                #         Processes[index_processes].join()
+
+
+
+
+
+
+
+
+                # for sublist in len_processes_split:
+                #     if len(sublist) > 0:
+                #         for index_processes in sublist:
+                #
+                #             Processes[index_processes].start()
+                #         #
+                #         for ff, index_processes in enumerate(sublist):
+                #             # print(f'Start process #{ff}')
+                #             # Processes[index_processes].terminate()
+                #             Processes[index_processes].join()
+                #             Processes[index_processes].terminate()
                 # pool = mp.Pool(count)
                 # results[:, :, ii, ll, jj, kk] = pool.map(partial(self._iteration_step_along_crval2,
                 #                                                  d_cdelta1=d_cdelta1,
