@@ -466,9 +466,9 @@ class Alignment:
 
                 while (np.sum([p.is_alive() for mm, p in zip(range(lenp), Processes) if (mm not in is_close)]) != 0):
                     pass
-                for P in Processes:
-
-                    P.join()
+                # for P in Processes:
+                #
+                #     P.join()
 
                 # while (index_processes < len(Processes)):
                 #     idx = []
