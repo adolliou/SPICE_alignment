@@ -383,7 +383,7 @@ class PlotFunctions:
     def plot_co_alignment(large_fov_window, large_fov_path, corr,
                           small_fov_window, small_fov_path, levels_percentile=[85],
                           lag_crval1=None, lag_crval2=None, lag_crota=None, lag_cdelta1=None, lag_cdelta2=None,
-                          show=False, results_folder=None, ):
+                          show=False, results_folder=None, cut_from_center=None):
 
         parameter_alignment = {
             "crval1": lag_crval1,
@@ -423,6 +423,14 @@ class PlotFunctions:
                     data_spice = np.nansum(data_small[0, :, :, :], axis=0)
                     data_spice[:ymin, :] = np.nan
                     data_spice[ymax:, :] = np.nan
+
+                    if cut_from_center is not None:
+
+                        if cut_from_center is not None:
+                            xlen = cut_from_center
+                            xmid = data_spice.shape[1] // 2
+                            data_spice[:, :(xmid - xlen // 2 - 1)] = np.nan
+                            data_spice[:, (xmid + xlen // 2):] = np.nan
 
                     # header_spice["CRPIX1"] = (data_spice.shape[1] + 1) / 2
                     # header_spice["CRPIX2"] = (data_spice.shape[0] + 1) / 2
