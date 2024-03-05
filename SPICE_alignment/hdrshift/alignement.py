@@ -114,15 +114,15 @@ class Alignment:
             if kwargs["d_cdelta1"] != 0.0:
                 change_pcij = True
                 cdelt1 = (u.Quantity(self.cdelta1_ref, self.unit_lag)
-                                 + u.Quantity(kwargs["d_cdelta1"], self.unit_lag))
+                          + u.Quantity(kwargs["d_cdelta1"], self.unit_lag))
                 hdr['CDELT1'] = cdelt1.to(hdr["CUNIT1"]).value
         if 'd_cdelta2' in kwargs.keys():
             if kwargs["d_cdelta2"] != 0.0:
                 change_pcij = True
 
                 cdelt2 = (u.Quantity(self.cdelta2_ref, self.unit_lag)
-                                 + u.Quantity(kwargs["d_cdelta2"], self.unit_lag))
-                hdr['CDELT2']= cdelt2.to(hdr["CUNIT2"]).value
+                          + u.Quantity(kwargs["d_cdelta2"], self.unit_lag))
+                hdr['CDELT2'] = cdelt2.to(hdr["CUNIT2"]).value
         if 'd_crota' in kwargs.keys():
             if kwargs["d_crota"] != 0.0:
                 change_pcij = True
@@ -202,7 +202,6 @@ class Alignment:
         data_small_interp = self.function_to_apply(d_solar_r=d_solar_r, data=data_small, hdr=hdr_small_shft)
         data_small_interp = copy.deepcopy(data_small_interp)
 
-
         condition_1 = np.ones(len(data_small_interp.ravel()), dtype='bool')
         condition_2 = np.ones(len(data_small_interp.ravel()), dtype='bool')
 
@@ -211,7 +210,6 @@ class Alignment:
         if self.small_fov_value_max is not None:
             condition_2 = np.array(data_small_interp.ravel() < self.small_fov_value_max, dtype='bool')
 
-
         if method == 'correlation':
 
             lag = [0]
@@ -219,14 +217,14 @@ class Alignment:
                                | (np.isnan(data_small_interp.ravel(), dtype='bool'))),
                               dtype='bool')
             c = c_correlate.c_correlate(data_large.ravel()[(~is_nan) & (condition_1) & (condition_2)],
-                                           data_small_interp.ravel()[(~is_nan) & (condition_1) & (condition_2)],
-                                           lags=lag)
+                                        data_small_interp.ravel()[(~is_nan) & (condition_1) & (condition_2)],
+                                        lags=lag)
             # print(f'{data_large=}')
             # l = data_small_interp.shape
             # print(f'{data_small_interp[l[0]//2, l[1]//2]=}')
             # print(f'{c=}')
 
-            c  = copy.deepcopy(c)
+            c = copy.deepcopy(c)
             shmm_large.close()
             shmm_small.close()
 
@@ -423,27 +421,37 @@ class Alignment:
                                 }
 
                                 Processes.append(Process(target=self._iteration_step_along_crval2, kwargs=kwargs))
-                len_processes = np.arange(len(Processes))
+                # len_processes = np.arange(len(Processes))
                 # start_index = np.arange(0, len(Processes), self.counts)
                 if self.counts is None:
                     self.counts = mp.cpu_count()
-                len_processes_split = divide_chunks(l=len_processes, n=self.counts)
-                print(f"{len_processes_split=}")
+                # len_processes_split = divide_chunks(l=len_processes, n=self.counts)
+                # print(f"{len_processes_split=}")
                 # len_processes_split = np.array_split(len_processes, self.counts)
                 # print(f'{len_processes_split=}')
                 len_processes_split_ = []
                 index_processes = 0
-                sublists_Processes = [Processes[x:x + self.counts] for x in range(0, len(Processes), self.counts)]
-                for sublist in sublists_Processes:
-                    ii = 0
-                    for P in sublist:
-                        print(f'{ii=}')
-                        ii +=1
-                        P.start()
-                    for P in sublist:
-                        P.join()
-                        P.terminate()
-
+                # sublists_Processes = [Processes[x:x + self.counts] for x in range(0, len(Processes), self.counts)]
+                # for sublist in sublists_Processes:
+                #     ii = 0
+                #     for P in sublist:
+                #         print(f'{ii=}')
+                #         ii += 1
+                #         P.start()
+                #     for P in sublist:
+                #         P.join()
+                #         P.terminate()
+                lenp = len(Processes)
+                ii = -1
+                while (ii < lenp - 1):
+                    ii += 1
+                    Processes[ii].start()
+                    while (np.sum([p.is_alive() for p in Processes]) > self.counts):
+                        pass
+                while(np.sum([p.is_alive() for p in Processes]) != 0):
+                    pass
+                for P in Processes:
+                    P.join()
 
                 # while (index_processes < len(Processes)):
                 #     idx = []
@@ -455,13 +463,6 @@ class Alignment:
                 #         A += 1
                 #     while (count < self.counts):
                 #         Processes[index_processes].join()
-
-
-
-
-
-
-
 
                 # for sublist in len_processes_split:
                 #     if len(sublist) > 0:
