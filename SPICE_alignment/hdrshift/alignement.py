@@ -464,7 +464,7 @@ class Alignment:
                                 # Processes.pop(kk)
 
 
-                while (np.sum([p.is_alive() for p in Processes]) != 0):
+                while (np.sum([p.is_alive() for mm, p in zip(range(lenp), Processes) if (mm not in is_close)]) != 0):
                     pass
                 for P in Processes:
 
