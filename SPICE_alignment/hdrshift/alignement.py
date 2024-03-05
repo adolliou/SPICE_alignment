@@ -216,8 +216,8 @@ class Alignment:
                                            data_small_interp.ravel()[(~is_nan) & (condition_1) & (condition_2)],
                                            lags=lag)
             print(f'{data_large=}')
-            l = len(data_small_interp)
-            print(f'{data_small_interp[l//2, l//2]=}')
+            l = data_small_interp.shape
+            print(f'{data_small_interp[l[0]//2, l[1]//2]=}')
             print(f'{c=}')
 
             c  = copy.deepcopy(c)
