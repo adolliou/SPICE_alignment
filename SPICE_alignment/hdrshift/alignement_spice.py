@@ -23,7 +23,8 @@ class AlignmentSpice(Alignment):
                          large_fov_window=large_fov_window, small_fov_window=small_fov_window,
                          path_save_figure=path_save_figure, )
 
-    def align_using_helioprojective(self, method='correlation', index_amplitude=None, extend_pixel_size=False):
+    def align_using_helioprojective(self, method='correlation', index_amplitude=None, extend_pixel_size=False,
+                                    cut_from_center=None):
         self.lonlims = None
         self.latlims = None
         self.shape = None
@@ -32,6 +33,7 @@ class AlignmentSpice(Alignment):
         self.method = method
         self.coordinate_frame = "helioprojective"
         self.extend_pixel_size = extend_pixel_size
+        self.cut_from_center = cut_from_center
         self._extract_imager_data_header()
 
         level = None
@@ -39,7 +41,7 @@ class AlignmentSpice(Alignment):
             level = 2
         elif "L3" in self.small_fov_to_correct:
             level = 3
-        self._extract_spice_data_header(level=level, index_amplitude=index_amplitude)
+        self._extract_spice_data_header(level=level, index_amplitude=index_amplitude, )
 
         results = super()._find_best_header_parameters()
 
@@ -157,6 +159,13 @@ class AlignmentSpice(Alignment):
         self.data_small = np.nansum(data_small[0, :, :, :], axis=0)
         self.data_small[:ymin, :] = np.nan
         self.data_small[ymax:, :] = np.nan
+
+        if self.cut_from_center is not None:
+            xlen = self.cut_from_center
+            xmid = self.data_small.shape[1]//2
+            self.data_small[:, :(xmid - xlen//2 - 1)] = np.nan
+            self.data_small[:, (xmid + xlen // 2):] = np.nan
+
 
 
         #
