@@ -166,13 +166,14 @@ class Alignment:
             print(f'je suis là')
 
             for ii, d_crval2 in enumerate(self.lag_crval2):
-                print(f'{ii=}')
-                print(f'{d_crval2=}')
+                # print(f'{ii=}')
+                # print(f'{d_crval2=}')
 
                 results[ii] = self._step(d_crval2=d_crval2, d_crval1=d_crval1,
                                          d_cdelta1=d_cdelta1, d_cdelta2=d_cdelta2, d_crota=d_crota,
                                          method=method, d_solar_r=d_solar_r,
                                          )
+                print(f'{results=}')
         # if lock is not None:
         print(f'je suis ici')
 
