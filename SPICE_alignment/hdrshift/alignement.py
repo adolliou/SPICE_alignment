@@ -139,7 +139,10 @@ class Alignment:
                         s = - np.sign(hdr["PC1_2"])
                         crot = crot * s
                         hdr["CROTA"] = crot
-            crot = self.crota_ref + kwargs["d_crota"]
+            if kwargs["d_crota"] != 0.0:
+                crot = self.crota_ref + kwargs["d_crota"]
+            else:
+                crot = self.crota_ref
             # raise NotImplementedError
         if change_pcij:
             # print(f'{self.crota_ref=}')
@@ -273,6 +276,13 @@ class Alignment:
             self.shape = shape
         else:
             raise ValueError("either set lonlims as None, or not. no in between.")
+
+        if 'CROTA' not in self.hdr_small:
+            s = - np.sign(self.hdr_small["PC1_2"])
+            self.hdr_small["CROTA"] = s * np.rad2deg(np.arccos(self.hdr_small["PC1_1"]))
+        if 'CROTA' not in self.hdr_large:
+            s = - np.sign(self.hdr_large["PC1_2"])
+            self.hdr_large["CROTA"] = s * np.rad2deg(np.arccos(self.hdr_large["PC1_1"]))
 
         f_large.close()
         f_small.close()
