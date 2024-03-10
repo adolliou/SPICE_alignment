@@ -136,7 +136,7 @@ class Alignment:
                 else:
                     if kwargs["d_crota"] != 0.0:
                         crot = np.rad2deg(np.arccos(hdr["PC1_1"]))
-                        s = - np.sign(hdr["PC1_2"])
+                        s = - np.sign(hdr["PC1_2"]) + (hdr["PC1_2"] == 0.0)
                         crot = crot * s
                         hdr["CROTA"] = crot
             if kwargs["d_crota"] != 0.0:
@@ -278,10 +278,11 @@ class Alignment:
             raise ValueError("either set lonlims as None, or not. no in between.")
 
         if 'CROTA' not in self.hdr_small:
-            s = - np.sign(self.hdr_small["PC1_2"])
+            s = - np.sign(self.hdr_small["PC1_2"]) + (self.hdr_small["PC1_2"] == 0)
+
             self.hdr_small["CROTA"] = s * np.rad2deg(np.arccos(self.hdr_small["PC1_1"]))
         if 'CROTA' not in self.hdr_large:
-            s = - np.sign(self.hdr_large["PC1_2"])
+            s = - np.sign(self.hdr_large["PC1_2"]) + (self.hdr_large["PC1_2"] == 0)
             self.hdr_large["CROTA"] = s * np.rad2deg(np.arccos(self.hdr_large["PC1_1"]))
 
         f_large.close()
@@ -352,7 +353,8 @@ class Alignment:
         elif 'CROTA2' in self.hdr_small:
             self.crota_ref = self.hdr_small['CROTA2']
         else:
-            s = - np.sign(self.hdr_small['PC1_2'])
+            s = - np.sign(self.hdr_small['PC1_2']) + (self.hdr_small['PC1_2'] == 0)
+
             self.crota_ref = np.rad2deg(np.arccos(self.hdr_small['PC1_1'])) * s
             self.hdr_small["CROTA"] = np.rad2deg(np.arccos(self.hdr_small['PC1_1']))
             # self.use_crota = False
