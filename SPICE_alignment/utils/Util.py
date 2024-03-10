@@ -1,3 +1,5 @@
+import warnings
+
 import astropy.io.fits as fits
 from astropy.time import Time, TimeDelta
 import astropy.constants
@@ -110,6 +112,13 @@ class AlignCommonUtil:
                 # else:
                 #     raise NotImplementedError
 
+                if hdul[window].header["PC1_1"] > 1.0:
+                    warnings.warn(f'{hdul[window].header["PC1_1"]=}, set it to 1.0')
+                    hdul[window].header["PC1_1"] = 1.0
+                    hdul[window].header["PC2_2"] = 1.0
+                    hdul[window].header["PC1_2"] = 0.0
+                    hdul[window].header["PC2_1"] = 0.0
+                    hdul[window].header["CROTA"] = 0.0
                 change_pcij = False
                 if lag_crval1 is not None:
                     hdul[window].header['CRVAL1'] = hdul[window].header['CRVAL1'
@@ -131,7 +140,7 @@ class AlignCommonUtil:
                     crota = hdul[window].header[key_rota]
                 else:
                     crota = u.Quantity(np.arccos(hdul[window].header["PC1_1"]), "rad").to("deg").value
-                    s = - np.sign(hdul[window].header["PC1_2"])
+                    s = - np.sign(hdul[window].header["PC1_2"]) + (hdul[window].header["PC1_2"] == 0.0)
                     crota = crota * s
 
                 if lag_crota is not None:

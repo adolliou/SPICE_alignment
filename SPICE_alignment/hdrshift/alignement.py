@@ -326,6 +326,24 @@ class Alignment:
         # self._recenter_crpix_in_header(self.hdr_large)
 
         self.hdr_small = f_small[self.small_fov_window].header.copy()
+
+        if self.hdr_small["PC1_1"] > 1.0:
+            warnings.warn(f'{self.hdr_small["PC1_1"]=}, setting to  1.0.')
+            self.hdr_small["PC1_1"] = 1.0
+            self.hdr_small["PC2_2"] = 1.0
+            self.hdr_small["PC1_2"] = 0.0
+            self.hdr_small["PC2_1"] = 0.0
+            self.hdr_small["CROTA"] = 0.0
+
+        if self.hdr_large["PC1_1"] > 1.0:
+            warnings.warn(f'{self.hdr_large["PC1_1"]=}, setting to  1.0.')
+
+            self.hdr_large["PC1_1"] = 1.0
+            self.hdr_large["PC2_2"] = 1.0
+            self.hdr_large["PC1_2"] = 0.0
+            self.hdr_large["PC2_1"] = 0.0
+            self.hdr_large["CROTA"] = 0.0
+
         # self._recenter_crpix_in_header(self.hdr_small)
         self.data_small = np.array(f_small[self.small_fov_window].data.copy(), dtype=np.float64)
         f_large.close()

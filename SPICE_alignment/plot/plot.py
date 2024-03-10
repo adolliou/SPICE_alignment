@@ -12,6 +12,7 @@ from astropy.io import fits
 from ..utils.Util import AlignSpiceUtil, AlignEUIUtil, PlotFits, AlignCommonUtil
 from astropy.time import Time
 import os
+import warnings
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 def interpol2d(image, x, y, order=1, fill=0, opencv=False, dst=None):
@@ -462,6 +463,14 @@ class PlotFunctions:
                     hdr_spice_shifted["CUNIT2"]).value
                 change_pcij = False
 
+                if hdr_spice_shifted["PC1_1"] > 1.0:
+                    warnings.warn(f'{hdr_spice_shifted["PC1_1"]=}, set it to 1.0')
+                    hdr_spice_shifted["PC1_1"] = 1.0
+                    hdr_spice_shifted["PC2_2"] = 1.0
+                    hdr_spice_shifted["PC1_2"] = 0.0
+                    hdr_spice_shifted["PC2_1"] = 0.0
+                    hdr_spice_shifted["CROTA"] = 0.0
+
                 key_rota = None
                 if "CROTA" in hdr_spice_shifted:
                     key_rota = "CROTA"
@@ -469,6 +478,8 @@ class PlotFunctions:
                     key_rota = "CROTA2"
 
                 crota = np.rad2deg(np.arccos(copy.deepcopy(hdr_spice_shifted["PC1_1"])))
+
+
 
                 if parameter_alignment['crota'] is not None:
                     # hdr_spice_shifted["CROTA"] = hdul_spice[raster_window].header["CROTA"] +\
