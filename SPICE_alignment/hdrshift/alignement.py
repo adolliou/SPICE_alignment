@@ -277,9 +277,26 @@ class Alignment:
         else:
             raise ValueError("either set lonlims as None, or not. no in between.")
 
+        if self.hdr_small["PC1_1"] > 1.0:
+            warnings.warn(f'{self.hdr_small["PC1_1"]=}, setting to  1.0.')
+            self.hdr_small["PC1_1"] = 1.0
+            self.hdr_small["PC2_2"] = 1.0
+            self.hdr_small["PC1_2"] = 0.0
+            self.hdr_small["PC2_1"] = 0.0
+            self.hdr_small["CROTA"] = 0.0
+
+        if self.hdr_large["PC1_1"] > 1.0:
+            warnings.warn(f'{self.hdr_large["PC1_1"]=}, setting to  1.0.')
+
+            self.hdr_large["PC1_1"] = 1.0
+            self.hdr_large["PC2_2"] = 1.0
+            self.hdr_large["PC1_2"] = 0.0
+            self.hdr_large["PC2_1"] = 0.0
+            self.hdr_large["CROTA"] = 0.0
+
+
         if 'CROTA' not in self.hdr_small:
             s = - np.sign(self.hdr_small["PC1_2"]) + (self.hdr_small["PC1_2"] == 0)
-
             self.hdr_small["CROTA"] = s * np.rad2deg(np.arccos(self.hdr_small["PC1_1"]))
         if 'CROTA' not in self.hdr_large:
             s = - np.sign(self.hdr_large["PC1_2"]) + (self.hdr_large["PC1_2"] == 0)
