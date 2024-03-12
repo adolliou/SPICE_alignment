@@ -330,10 +330,11 @@ class PlotFunctions:
         cbar.formatter.set_powerlimits((0, 0))
 
         if norm_contour is None:
-            isnan = np.isnan(data_contour_2)
-            min = np.percentile(data_contour_2[~isnan], 5)
-            max = np.percentile(data_contour_2[~isnan], 98)
-            norm_contour = ImageNormalize(stretch=LinearStretch(), vmin=min, vmax=max)
+            # isnan = np.isnan(data_contour_2)
+            # min = np.percentile(data_contour_2[~isnan], 5)
+            # max = np.percentile(data_contour_2[~isnan], 98)
+            # norm_contour = ImageNormalize(stretch=LinearStretch(), vmin=min, vmax=max)
+            norm_contour = PlotFits.get_range(data_contour_2, imin=3, imax=97, stre=None)
         longitude_grid_arc = AlignCommonUtil.ang2pipi(lon_grid).to("arcsec").value
         latitude_grid_arc = AlignCommonUtil.ang2pipi(lat_grid).to("arcsec").value
         dlon = longitude_grid_arc[1, 1] - longitude_grid_arc[0, 0]
@@ -350,9 +351,15 @@ class PlotFunctions:
         ax3.set_xlabel("Solar-X [arcsec]")
         ax3.set_ylabel("Solar-Y [arcsec]")
         if "BUNIT" in hdr_contour_2:
-            cbar3 = fig.colorbar(im3, cax=ax_cbar2, label=hdr_contour_2["BUNIT"], pad=-0.5, fraction=0.001)
+            divider = make_axes_locatable(ax3)
+            cax = divider.append_axes("right", size="5%", pad=0.05)
+            cbar3 = fig.colorbar(im3, cax=cax, label=hdr_contour_2["BUNIT"])
+
         else:
-            cbar3 = fig.colorbar(im3, cax=ax_cbar2, label="unkown", pad=-0.5, fraction=0.001)
+            divider = make_axes_locatable(ax3)
+            cax = divider.append_axes("right", size="5%", pad=0.05)
+            cbar3 = fig.colorbar(im3, cax=cax, label="unkown",)
+            # pad=-0.5, fraction=0.001
 
         ax1.set_title("(a) Before alignment")
         ax2.set_title("(b) After alignment")
