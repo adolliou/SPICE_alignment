@@ -325,7 +325,6 @@ class PlotFunctions:
                                        norm=norm,
                                        header_coordinates_plot=hdr_contour_1, return_grid=True)
 
-        cbar.formatter.set_powerlimits((0, 0))
 
         if norm_contour is None:
             # isnan = np.isnan(data_contour_2)
@@ -362,11 +361,14 @@ class PlotFunctions:
                                 fraction=0.001)  # , fraction=0.046, pad=0.04
         else:
             cbar = fig.colorbar(im, cax=ax_cbar1, label="unknown units", pad=-3, fraction=0.001)
+        cbar.formatter.set_powerlimits((0, 0))
+
         if "BUNIT" in hdr_contour_2:
             cbar3 = fig.colorbar(im3, cax=ax_cbar2, label=hdr_contour_2["BUNIT"], pad=-0.5, fraction=0.001)
 
         else:
             cbar3 = fig.colorbar(im3, cax=ax_cbar2, label="unkown", pad=-0.5, fraction=0.001)
+        cbar3.formatter.set_powerlimits((0, 0))
 
         ax1.set_title("(a) Before alignment")
         ax2.set_title("(b) After alignment")
