@@ -324,11 +324,7 @@ class PlotFunctions:
                                        path_save=None, show=False, levels=levels, fig=fig, ax=ax2,
                                        norm=norm,
                                        header_coordinates_plot=hdr_contour_1, return_grid=True)
-        if "BUNIT" in hdr_main:
-            cbar = fig.colorbar(im, cax=ax_cbar1, label=hdr_main["BUNIT"], pad=-3,
-                                fraction=0.001)  # , fraction=0.046, pad=0.04
-        else:
-            cbar = fig.colorbar(im, cax=ax_cbar1, label="unknown units", pad=-3, fraction=0.001)
+
         cbar.formatter.set_powerlimits((0, 0))
 
         if norm_contour is None:
@@ -359,6 +355,13 @@ class PlotFunctions:
         ax_cbar2 = fig.add_axes(
             [ax3.get_position().x1 + 0.013, ax3.get_position().y0,
              0.01, ax3.get_position().height * 0.7])
+
+        ax3.ticklabel_format(axis="both", style="sci", scilimits=(0, 0))
+        if "BUNIT" in hdr_main:
+            cbar = fig.colorbar(im, cax=ax_cbar1, label=hdr_main["BUNIT"], pad=-3,
+                                fraction=0.001)  # , fraction=0.046, pad=0.04
+        else:
+            cbar = fig.colorbar(im, cax=ax_cbar1, label="unknown units", pad=-3, fraction=0.001)
         if "BUNIT" in hdr_contour_2:
             cbar3 = fig.colorbar(im3, cax=ax_cbar2, label=hdr_contour_2["BUNIT"], pad=-0.5, fraction=0.001)
 
