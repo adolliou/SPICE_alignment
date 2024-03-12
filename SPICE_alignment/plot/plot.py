@@ -348,6 +348,7 @@ class PlotFunctions:
                          aspect=aspect,
                          extent=[longitude_grid_arc[0, 0] - 0.5 * dlon, longitude_grid_arc[-1, -1] + 0.5 * dlon,
                                  latitude_grid_arc[0, 0] - 0.5 * dlat, latitude_grid_arc[-1, -1] + 0.5 * dlat])
+        ax3.ticklabel_format(axis="both", style="sci", scilimits=(2, 6))
         ax3.set_xlabel("Solar-X [arcsec]")
         ax3.set_ylabel("Solar-Y [arcsec]")
         if "BUNIT" in hdr_contour_2:
