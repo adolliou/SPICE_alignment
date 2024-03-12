@@ -304,12 +304,14 @@ class PlotFunctions:
         if ax3 is None:
             ax3 = fig.add_subplot(gs[3])
 
-        ax_cbar1 = fig.add_axes(
-            [ax2.get_position().x1 + 0.013, ax2.get_position().y0 + 0.15 * ax2.get_position().height,
-             0.01, ax2.get_position().height * 0.7])
-        ax_cbar2 = fig.add_axes(
-            [ax3.get_position().x1 + 0.013, ax3.get_position().y0 + 0.15 * ax3.get_position().height,
-             0.01, ax3.get_position().height * 0.7])
+        # ax_cbar1 = fig.add_axes(
+        #     [ax2.get_position().x1 + 0.013, ax2.get_position().y0 + 0.15 * ax2.get_position().height,
+        #      0.01, ax2.get_position().height * 0.7])
+        # ax_cbar2 = fig.add_axes(
+        #     [ax3.get_position().x1 + 0.013, ax3.get_position().y0 + 0.15 * ax3.get_position().height,
+        #      0.01, ax3.get_position().height * 0.7])
+
+
         im = PlotFunctions.contour_plot(hdr_main=hdr_main, data_main=data_main, plot_colorbar=False, aspect=aspect,
                                         hdr_contour=hdr_contour_1, data_contour=data_contour_1, cmap=cmap1,
                                         path_save=None, show=False, levels=levels, fig=fig, ax=ax1, norm=norm)
@@ -348,19 +350,20 @@ class PlotFunctions:
                          aspect=aspect,
                          extent=[longitude_grid_arc[0, 0] - 0.5 * dlon, longitude_grid_arc[-1, -1] + 0.5 * dlon,
                                  latitude_grid_arc[0, 0] - 0.5 * dlat, latitude_grid_arc[-1, -1] + 0.5 * dlat])
-        ax3.ticklabel_format(axis="both", style="sci", scilimits=(1, 6))
         ax3.set_xlabel("Solar-X [arcsec]")
         ax3.set_ylabel("Solar-Y [arcsec]")
+
+        ax_cbar1 = fig.add_axes(
+            [ax2.get_position().x1 + 0.013, ax2.get_position().y0,
+             0.01, ax2.get_position().height * 0.7])
+        ax_cbar2 = fig.add_axes(
+            [ax3.get_position().x1 + 0.013, ax3.get_position().y0,
+             0.01, ax3.get_position().height * 0.7])
         if "BUNIT" in hdr_contour_2:
-            divider = make_axes_locatable(ax3)
-            cax = divider.append_axes("right", size="5%", pad=0.05)
-            cbar3 = fig.colorbar(im3, cax=cax, label=hdr_contour_2["BUNIT"])
+            cbar3 = fig.colorbar(im3, cax=ax_cbar2, label=hdr_contour_2["BUNIT"], pad=-0.5, fraction=0.001)
 
         else:
-            divider = make_axes_locatable(ax3)
-            cax = divider.append_axes("right", size="5%", pad=0.05)
-            cbar3 = fig.colorbar(im3, cax=cax, label="unkown",)
-            # pad=-0.5, fraction=0.001
+            cbar3 = fig.colorbar(im3, cax=ax_cbar2, label="unkown", pad=-0.5, fraction=0.001)
 
         ax1.set_title("(a) Before alignment")
         ax2.set_title("(b) After alignment")
