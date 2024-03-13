@@ -225,7 +225,7 @@ class PlotFunctions:
                      ax=None, fig=None, norm=None, show_xlabel=True, show_ylabel=True, plot_colorbar=True,
                      header_coordinates_plot=None, cmap="plasma", return_grid=False, aspect=1):
         if header_coordinates_plot is None:
-            longitude_main, latitude_main = AlignEUIUtil.extract_EUI_coordinates(hdr_contour, dsun=False)
+            longitude_main, latitude_main = AlignEUIUtil.extract_EUI_coordinates(hdr_main, dsun=False)
         else:
             longitude_main, latitude_main = AlignEUIUtil.extract_EUI_coordinates(header_coordinates_plot, dsun=False)
 
