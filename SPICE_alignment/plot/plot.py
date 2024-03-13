@@ -273,10 +273,13 @@ class PlotFunctions:
         if show_ylabel:
             ax.set_ylabel("Solar-Y [arcsec]")
         if plot_colorbar:
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes("right", size="5%", pad=0.05)
             if "BUNIT" in hdr_main:
-                fig.colorbar(im, label=hdr_main["BUNIT"])
+
+                fig.colorbar(im,cax=cax, label=hdr_main["BUNIT"])
             else:
-                fig.colorbar(im, )
+                fig.colorbar(im, cax=cax)
         if show:
             fig.show()
         if path_save is not None:
@@ -296,6 +299,15 @@ class PlotFunctions:
             raise ValueError("Must explicit vmin and vmax in norm, so that the cbar is the same for both figures.")
         if fig is None:
             fig = plt.figure(figsize=(10, 4))
+
+
+        cm = 1/2.54  # centimeters in inches
+        #
+        fig1 = plt.figure(figsize=(17*cm, 10*cm))
+        gs1 = GridSpec(1, 2, wspace=0.5)
+
+        axs1 = [fig.add_subplot(gs1[n]) for n in range(2)]
+
         gs = GridSpec(1, 5, width_ratios=[1, 1, 0.2, 1, 0.2], wspace=0.5)
         if ax1 is None:
             ax1 = fig.add_subplot(gs[0])
@@ -310,7 +322,6 @@ class PlotFunctions:
         # ax_cbar2 = fig.add_axes(
         #     [ax3.get_position().x1 + 0.013, ax3.get_position().y0 + 0.15 * ax3.get_position().height,
         #      0.01, ax3.get_position().height * 0.7])
-
 
         im = PlotFunctions.contour_plot(hdr_main=hdr_main, data_main=data_main, plot_colorbar=False, aspect=aspect,
                                         hdr_contour=hdr_contour_1, data_contour=data_contour_1, cmap=cmap1,
@@ -350,10 +361,10 @@ class PlotFunctions:
 
         ax_cbar1 = fig.add_axes(
             [ax2.get_position().x1 + 0.013, ax2.get_position().y0,
-             0.01, ax2.get_position().height * 0.7])
+             0.01, ax2.get_position().height])
         ax_cbar2 = fig.add_axes(
             [ax3.get_position().x1 + 0.013, ax3.get_position().y0,
-             0.01, ax3.get_position().height * 0.7])
+             0.01, ax3.get_position().height])
 
         ax3.ticklabel_format(axis="both", style="sci", scilimits=(0, 0))
         if "BUNIT" in hdr_main:
