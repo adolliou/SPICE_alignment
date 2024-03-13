@@ -130,11 +130,14 @@ class PlotFunctions:
             ax.set_xlabel(lag_dx_label)
         if lag_dy_label is not None:
             ax.set_ylabel(lag_dy_label)
-        cbar = fig.colorbar(im)
-        cbar.set_label("correlation")
+
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        cbar = fig.colorbar(im, cax=cax, label="correlation" )
         if show:
             fig.show()
         if path_save is not None:
+            fig.tight_layout()
             fig.savefig(path_save)
 
     @staticmethod
