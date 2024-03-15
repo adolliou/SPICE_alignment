@@ -57,8 +57,9 @@ C.process(path_output=output_L3_fits)
 ```
 ### Align SPICE raster with the created synthetic raster
 
-Create a SPICE pseudo raster by spectrally summing over the chosen HDUList window. Then perform a cross-correlation algorithm by shifting the headers values.
-It returns a cross-correlation matrix that can be used to determine the optimal shift to apply to the header values. The header values that can be shifted are CRVAL1, CRVAL2, CROTA, CDELT1 (not recommended as of now) and CDELT2 (not recommanded as of now).
+Create a SPICE pseudo raster by spectrally summing over the chosen HDUList window. Then perform cross-correlations while shifting the headers values.
+It returns a cross-correlation matrix that can be used to determine the optimal shift to apply to the header values.
+The header values that can be shifted are CRVAL1, CRVAL2, CROTA, CDELT1 (not tested) and CDELT2 (not tested).
 
 ```python
 import numpy as np
@@ -91,26 +92,27 @@ parallelism = True
 
 A = AlignmentSpice(large_fov_known_pointing=path_to_synthetic_raster_fits, small_fov_to_correct=path_spice_input,
                          use_tqdm=True,
-                   parallelism=parallelism,
+                   parallelism=parallelism, counts_cpu_max=10,
                         large_fov_window=-1, small_fov_window=window_sr,
                         path_save_figure=path_save_figure,
                    **param_alignement)
 
 corr = A.align_using_helioprojective(method='correlation')
-PlotFunctions.plot_correlation(corr, lag_crval1, lag_crval2,)
+PlotFunctions.plot_correlation(corr, **param_alignement)
 AlignSpiceUtil.write_corrected_fits(path_spice_l2_input=path_spice_input, 
-                               path_spice_l2_output="path/where/to/save/corrected/fits", lag_crval1=lag_crval1, 
-                               lag_crval2=lag_crval2, corr=corr, window_spice_list=windows_spice)
+                               path_spice_l2_output="path/where/to/save/corrected/fits", corr=corr,
+                                    window_spice_list=windows_spice, 
+                                    **param_alignement)
 
 PlotFunctions.plot_co_alignment(large_fov_window=-1, large_fov_path=path_to_synthetic_raster_fits,
                                            corr=corr, small_fov_window= window_spice_to_align, 
-                                levels_percentile=[80, 90],
+                                levels_percentile=[80, 90], 
                                            results_folder=None, small_fov_path=path_spice_input, show=True,
-                                           lag_crval1=lag_crval1, lag_crval2=lag_crval2)
+                                           **param_alignement)
 
 
 ```
-Example of a results for co-alignment between SPICE and FSI 304, from plot_spice_co_alignement:
+Example of a results for co-alignment between a SPICE C III image and a FSI 304 synthetic raster, obatined with plot_co_alignment :
 ![Example of a results for co-alignment between SPICE and FSI 304, from plot_spice_co_alignement](co_alignment_SPICE_FSI.png)
 
 
