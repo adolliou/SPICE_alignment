@@ -68,7 +68,7 @@ def interpol2d(image, x, y, order=1, fill=0, opencv=False, dst=None):
 
 class PlotFunctions:
     @staticmethod
-    def plot_correlation(corr, lag_dx, lag_dy, lag_drot=None, lag_cdelta1=None, lag_cdelta2=None,
+    def plot_correlation(corr, lag_crval1, lag_crval2, lag_drot=None, lag_cdelta1=None, lag_cdelta2=None,
                          path_save=None, fig=None, ax=None, show=False,
                          lag_dx_label=None, lag_dy_label=None, unit='\'\'', type_plot="xy", ):
 
@@ -85,8 +85,10 @@ class PlotFunctions:
             fig = plt.figure()
         if ax is None:
             ax = fig.add_subplot()
-        dy = lag_dy[1] - lag_dy[0]
-        dx = lag_dx[1] - lag_dx[0]
+        dy = lag_crval2[1] - lag_crval2[0]
+        dx = lag_crval1[1] - lag_crval1[0]
+        lag_dx = lag_crval1
+        lag_dy = lag_crval2
         # norm = PowerNorm(gamma=2)
         isnan = np.isnan(corr)
         min = np.percentile(corr[~isnan], 30)
@@ -95,8 +97,8 @@ class PlotFunctions:
 
         im = ax.imshow(np.swapaxes(corr, axis1=0, axis2=1), origin='lower', interpolation="none",
                        norm=norm, cmap="plasma",
-                       extent=[lag_dx[0] - 0.5 * dx, lag_dx[-1] + 0.5 * dx,
-                               lag_dy[0] - 0.5 * dy, lag_dy[-1] + 0.5 * dy])
+                       extent=(lag_dx[0] - 0.5 * dx, lag_dx[-1] + 0.5 * dx,
+                               lag_dy[0] - 0.5 * dy, lag_dy[-1] + 0.5 * dy))
         rect = patches.Rectangle((lag_dx[max_index[0]] - 0.5 * dx, lag_dy[max_index[1]] - 0.5 * dy), dx, dy,
                                  edgecolor='r', linewidth=0.3, facecolor="none")
         ax.add_patch(rect)

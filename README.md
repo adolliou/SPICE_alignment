@@ -62,39 +62,50 @@ It returns a cross-correlation matrix that can be used to determine the optimal 
 
 ```python
 import numpy as np
-from SPICE_alignment.plot.plot import PlotFunctions
-from SPICE_alignment.utils.Util import SpiceUtil
 from SPICE_alignment.hdrshift.alignement_spice import AlignmentSpice
+from SPICE_alignment.plot.plot import PlotFunctions
+from SPICE_alignment.utils.Util import AlignSpiceUtil
 
 
 path_to_synthetic_raster_fits = "path/to/input/synthetic_raster.fits"
 path_spice_input = "path/to/spice/l2.fits"
-window_spice = "Ly-gamma-CIII group (Merged)" # int or str: window in the HDUList used.depends on the alignmenet you want to do. 
+window_spice_to_align =  "Ly-gamma-CIII group (Merged)"
+windows_spice = ["Mg IX 706 - Peak",
+            "Ne VIII 770 - Peak",
+            "S V 786 / O IV 787 - Peak",
+            "Ly-gamma-CIII group (Merged)",
+            "LyB- FeX group (Merged)",
+            "O VI 1032 - Peak"] # int or str: window in the HDUList used.depends on the alignmenet you want to do. 
 window_sr = -1 # same for imagers in imager_list
 path_save_figure= "path/to/output/figures/folder"
 
-lag_crval1 = np.arange(-30, -15, 4) # lag crvals in the headers, in arcsec
-lag_crval2 = np.arange(30, 51, 4)  # in arcsec
-lag_crota = np.array([0]) # in degrees
-lag_cdelt1 = np.array([0]) # in arcsec
-lag_cdelt2 = np.array([0]) # in arcsec
+param_alignement = {
+    "lag_crval1": np.arange(-30, -15, 4), # lag crvals in the headers, in arcsec
+    "lag_crval2": np.arange(30, 51, 4),  # in arcsec
+    "lag_crota": np.array([0]), # in degrees
+    "lag_cdelt1": np.array([0]), # in arcsec
+    "lag_cdelt2": np.array([0]), # in arcsec
+}
+
 parallelism = True
 
 A = AlignmentSpice(large_fov_known_pointing=path_to_synthetic_raster_fits, small_fov_to_correct=path_spice_input,
-                        lag_crval1=lag_crval1, lag_crval2=lag_crval2, lag_crota=lag_crota, use_tqdm=True,
-                        lag_cdelta1=lag_cdelt1, lag_cdelta2=lag_cdelt2, parallelism=parallelism,
+                         use_tqdm=True,
+                   parallelism=parallelism,
                         large_fov_window=-1, small_fov_window=window_sr,
-                        path_save_figure=path_save_figure,)
+                        path_save_figure=path_save_figure,
+                   **param_alignement)
 
 corr = A.align_using_helioprojective(method='correlation')
 PlotFunctions.plot_correlation(corr, lag_crval1, lag_crval2,)
-SpiceUtil.write_corrected_fits(path_spice_l2_input=path_spice_input, 
+AlignSpiceUtil.write_corrected_fits(path_spice_l2_input=path_spice_input, 
                                path_spice_l2_output="path/where/to/save/corrected/fits", lag_crval1=lag_crval1, 
-                               lag_crval2=lag_crval2, corr=corr, window_spice=window_spice)
+                               lag_crval2=lag_crval2, corr=corr, window_spice_list=windows_spice)
 
-PlotFunctions.plot_spice_co_alignment(imager_window=-1, large_fov_fits_path=path_to_synthetic_raster_fits,
-                                           corr=corr, raster_window= window_spice, levels_percentile=[80, 90],
-                                           results_folder=None, spice_raster_path=path_spice_input, show=True,
+PlotFunctions.plot_co_alignment(large_fov_window=-1, large_fov_path=path_to_synthetic_raster_fits,
+                                           corr=corr, small_fov_window= window_spice_to_align, 
+                                levels_percentile=[80, 90],
+                                           results_folder=None, small_fov_path=path_spice_input, show=True,
                                            lag_crval1=lag_crval1, lag_crval2=lag_crval2)
 
 
@@ -107,7 +118,7 @@ Example of a results for co-alignment between SPICE and FSI 304, from plot_spice
 
 - carrington transform: [F. Auchère](https://github.com/frederic-auchere)
 - SPICE utils: [G. Pelouze](https://github.com/gpelouze)
-- matric transform: [F. Auchère](https://github.com/frederic-auchere)
+- matrix transform: [F. Auchère](https://github.com/frederic-auchere)
 
 ## Contact
 
