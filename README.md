@@ -2,14 +2,18 @@
 
 ## description :
 
-Alignement functions for Imagers, SPICE or EIS with imagers or synthetic rasters of imagers. 
-Co-align image using the Pearson's coefficient or the residus method. The alignement can be performed with both images: 
+Alignement functions for Imagers and SPICE with imagers or synthetic rasters of imagers. It is advised to use an imager
+with a Full Sun field of view as reference, where Limb fitting has been previously applied. Example of them include 
+the L2 FITS files of the FSI 174 and 304 imagers. 
+Co-align image using the Pearson's coefficient or the residus method. The alignement can in the following frames: 
 
-- in helioprojective coordinates (Alignement)
-- in carrington coordinates
-- by slicing over the large FOV image pixels, complitely neglecting the headers
+- in helioprojective coordinates.
+- in carrington coordinates. You have to give the information to build a pixel grid in a carrington frame.
+- by slicing over the image pixels, complitely neglecting the headers
 
-The code also allows to create synthetic rasters of SPICE or EIS image, using a list of imager paths.
+The code can be used to create synthetic rasters of SPICE image, using a list of imager paths.
+
+**Warning** As of now, the code has not been thouroughly tested. Please verify your alignement with the plot_co_alignment method.
 
 ## installation
 either use pip install + git in your virtual environment :
@@ -112,7 +116,7 @@ PlotFunctions.plot_co_alignment(large_fov_window=-1, large_fov_path=path_to_synt
 
 
 ```
-Example of a results for co-alignment between a SPICE C III image and a FSI 304 synthetic raster, obatined with plot_co_alignment :
+Example of a results for co-alignment between a SPICE C III image and a FSI 304 synthetic raster, obtained with plot_co_alignment :
 ![Example of a results for co-alignment between SPICE and FSI 304, from plot_spice_co_alignement](co_alignment_SPICE_FSI.png)
 
 
@@ -128,4 +132,4 @@ Author: Antoine Dolliou (antoine.dolliou@universite-paris-saclay.fr)
 
 ## Acknowledgment
 
-Please acknowledge Dolliou et al, 2024 (in prep)
+If you use this code in your publication, please cite Dolliou et al, 2024 (in prep). 
