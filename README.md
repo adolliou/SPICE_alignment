@@ -13,7 +13,8 @@ Co-align image using the Pearson's coefficient or the residus method. The aligne
 
 The code can be used to create synthetic rasters of SPICE image, using a list of imager paths.
 
-**Warning** As of now, the code has not been thouroughly tested. Please verify your alignement with the plot_co_alignment method.
+**Warning** As of now, the code works for day to day cases, but has not been thouroughly tested. Please verify the results with the plot_co_alignment method.
+Report any bug you encounter with Github or by e-mail to the author. 
 
 ## installation
 either use pip install + git in your virtual environment :
