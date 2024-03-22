@@ -7,7 +7,7 @@ In addition, the pakcage provides tools to create a synthethic raster correspond
 
 It is advised to use an imager with a Full Sun field of view as the reference image, where Limb fitting has been previously applied. Example of them include 
 the L2 FITS files of the FSI 174 and 304 imagers. 
-The co-alignment itself is performed using a cross-correlation tehcnique, through the Pearson's coefficient, or the residus method. The alignement can in the following frames: 
+The co-alignment itself is performed using a cross-correlation tehcnique, through the Pearson's coefficient, or the residus method. The alignement can be done in the following frames: 
 
 - in helioprojective coordinates.
 - in carrington coordinates. You have to provide the information to build a pixel grid in a carrington frame.
