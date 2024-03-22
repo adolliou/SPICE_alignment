@@ -7,13 +7,11 @@ In addition, the pakcage provides tools to create a synthethic raster correspond
 
 It is advised to use an imager with a Full Sun field of view as the reference image, where Limb fitting has been previously applied. Example of them include 
 the L2 FITS files of the FSI 174 and 304 imagers. 
-The co-alignment itself is performed using a cross-correlation tehcnique, through the Pearson's coefficient, or the residus method. The alignement can be done in the following frames: 
+The co-alignment itself is performed using a cross-correlation tehcnique, through the Pearson's coefficient, or the residus method. The alignement can be done in the following coordinates: 
 
-- in helioprojective coordinates.
-- in carrington coordinates. You have to provide the information to build a pixel grid in a carrington frame.
+- Helioprojective coordinates.
+- Carrington coordinates. In that case, you have to provide the information to build a pixel grid in a carrington frame.
 - by slicing over the image pixels, complitely neglecting the headers informations.
-
-The code can be used to create synthetic rasters of SPICE image, using a list of imager paths.
 
 **Warning** As of now, the code works for day to day cases, but has not been thouroughly tested. Please verify the results with the plot_co_alignment method.
 Report any bug you encounter with Github or by e-mail to the author. 
