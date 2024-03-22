@@ -51,9 +51,9 @@ import astropy.units as u
 
 path_spice = "path/to/spice/l2.fits"
 path_to_imager_list = glob("path/to/fsi304/*l2.fits")
-window_spice = "Ly-gamma-CIII group (Merged)" # int or str: window in the HDUList used.depends on the alignmenet you want to do. 
-window_imager = -1 # same for imagers in imager_list
-threshold_time = u.Quantity(30, "s") # maximum threshold time you want
+window_spice = "Ly-gamma-CIII group (Merged)" # The window of the HDULIST for the SPICE FITS file. 
+window_imager = -1 # The widow of the HDULIST of the imagers FITS files
+threshold_time = u.Quantity(30, "s") # maximum threshold between the SPICE acquisition time, and the closest FSI 304 image. If the code can't any FSI below the threshold, it returns an error 
 output_L3_fits = "path/to/output/synthetic_raster_folder"
 
 C = SPICEComposedMapBuilder(path_to_spectro=path_spice, list_imager_paths=path_to_imager_list,
