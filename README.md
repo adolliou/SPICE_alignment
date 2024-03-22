@@ -2,14 +2,15 @@
 
 ## description :
 
-Alignement functions for Imagers and SPICE with imagers or synthetic rasters of imagers. It is advised to use an imager
-with a Full Sun field of view as reference, where Limb fitting has been previously applied. Example of them include 
+This package provide tools to co-align an image with another one (called "reference" image).  You can provide an imager as input, using the Alignment class. You can also provide a SPICE raster, using the specific SpiceAlignment class.
+
+It is advised to use an imager with a Full Sun field of view as the reference image, where Limb fitting has been previously applied. Example of them include 
 the L2 FITS files of the FSI 174 and 304 imagers. 
-Co-align image using the Pearson's coefficient or the residus method. The alignement can in the following frames: 
+The co-alignment itself is performed using a cross-correlation tehcnique, through the Pearson's coefficient, or the residus method. The alignement can in the following frames: 
 
 - in helioprojective coordinates.
-- in carrington coordinates. You have to give the information to build a pixel grid in a carrington frame.
-- by slicing over the image pixels, complitely neglecting the headers
+- in carrington coordinates. You have to provide the information to build a pixel grid in a carrington frame.
+- by slicing over the image pixels, complitely neglecting the headers informations.
 
 The code can be used to create synthetic rasters of SPICE image, using a list of imager paths.
 
