@@ -17,22 +17,24 @@ The co-alignment itself is performed using a cross-correlation tehcnique, throug
 Report any bug you encounter with Github or by e-mail to the author. 
 
 ## Installation
-either use pip install + git in your virtual environment :
-
-```shell
-pip install git+https://github.com/adolliou/SPICE_Alignement
-```
-to create a virtual environement do in your local python folder :
+To create a virtual environement, write the following command in the shell :
 ```shell
 python -m venv env
 source env/bin/activate # write "deactivate" in shell to go out of your virtual environement. 
 ```
-or locally while in the local folder:
+
+You can use the pip install + git command, while you are in virtual environment :
 
 ```shell
-cd path/to/git/repo
+pip install git+https://github.com/adolliou/SPICE_Alignement
+```
+or clone the SPICE_alignment repository locally. Then, while you are in your virtual environment:
+
+```shell
+cd path/to/SPICE_alignment
 pip install .
 ```
+
 
 
 ## Usage
