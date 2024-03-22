@@ -1,6 +1,6 @@
 # SPICE_Alignement
 
-## description :
+## Description :
 
 This package provide tools to co-align an image with another one (called "reference" image).  You can provide an imager as input, using the Alignment class. You can also provide a SPICE raster, using the specific SpiceAlignment class. 
 In addition, the pakcage provides tools to create a synthethic raster corresponding to a given SPICE raster, using a time sequence of imager. The obtained synthetic raster can then be used as the reference image to co-align the SPICE raster.
@@ -16,7 +16,7 @@ The co-alignment itself is performed using a cross-correlation tehcnique, throug
 **Warning** As of now, the code works for day to day cases, but has not been thouroughly tested. Please verify the results with the plot_co_alignment method.
 Report any bug you encounter with Github or by e-mail to the author. 
 
-## installation
+## Installation
 either use pip install + git in your virtual environment :
 
 ```shell
@@ -120,7 +120,7 @@ Example of a results for co-alignment between a SPICE C III image and a FSI 304 
 ![Example of a results for co-alignment between SPICE and FSI 304, from plot_spice_co_alignement](co_alignment_SPICE_FSI.png)
 
 
-## credits
+## Credits
 
 - Carrington transform: [F. Auchère](https://github.com/frederic-auchere)
 - SPICE utils: [G. Pelouze](https://github.com/gpelouze)
