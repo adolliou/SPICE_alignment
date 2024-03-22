@@ -37,11 +37,10 @@ pip install .
 
 ## Usage
 
-See the test folder for multiple examples.
 We show here a typical example to align SPICE data with a synthetic raster created from FSI 304 files. 
 
 ### Creation of a SPICE synthetic raster 
-First of all, we need to create a synthetic raster of the SPICE raster using the reference SPICE raster and a list of the imager fits files. 
+First of all, we need to create a synthetic raster for the SPICE raster using a list of FSI 304 FITS files.
 ```python
 from SPICE_alignment.synras.map_builder import SPICEComposedMapBuilder
 from glob import glob
@@ -62,9 +61,9 @@ C.process(path_output=output_L3_fits)
 ```
 ### Align SPICE raster with the created synthetic raster
 
-Create a SPICE pseudo raster by spectrally summing over the chosen HDUList window. Then perform cross-correlations while shifting the headers values.
+The code first creates a SPICE pseudo raster by spectrally summing over the chosen HDUList window. It then cross-correlate the SPICE image and the synthetic raster, while shifting the header values of the SPICE image.
 It returns a cross-correlation matrix that can be used to determine the optimal shift to apply to the header values.
-The header values that can be shifted are CRVAL1, CRVAL2, CROTA, CDELT1 (not tested) and CDELT2 (not tested).
+The header values that can be shifted are CRVAL1, CRVAL2, CROTA, CDELT1  and CDELT2.
 
 ```python
 import numpy as np
