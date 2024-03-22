@@ -2,7 +2,8 @@
 
 ## description :
 
-This package provide tools to co-align an image with another one (called "reference" image).  You can provide an imager as input, using the Alignment class. You can also provide a SPICE raster, using the specific SpiceAlignment class.
+This package provide tools to co-align an image with another one (called "reference" image).  You can provide an imager as input, using the Alignment class. You can also provide a SPICE raster, using the specific SpiceAlignment class. 
+In addition, the pakcage provides tools to create a synthethic raster corresponding to a given SPICE raster, using a time sequence of imager. The obtained synthetic raster can then be used as the reference image to co-align the SPICE raster.
 
 It is advised to use an imager with a Full Sun field of view as the reference image, where Limb fitting has been previously applied. Example of them include 
 the L2 FITS files of the FSI 174 and 304 imagers. 
