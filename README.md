@@ -74,14 +74,14 @@ from SPICE_alignment.utils.Util import AlignSpiceUtil
 
 path_to_synthetic_raster_fits = "path/to/input/synthetic_raster.fits"
 path_spice_input = "path/to/spice/l2.fits"
-window_spice_to_align =  "Ly-gamma-CIII group (Merged)"
-windows_spice = ["Mg IX 706 - Peak",
+window_spice_to_align =  "Ly-gamma-CIII group (Merged)" # the window used for the co-alignment, here the one which includes the C III line.
+windows_spice = ["Mg IX 706 - Peak", # The windows where the pointing will be corrected. It is adviced to correct the shift in all of the spectral windows. 
             "Ne VIII 770 - Peak",
             "S V 786 / O IV 787 - Peak",
             "Ly-gamma-CIII group (Merged)",
             "LyB- FeX group (Merged)",
-            "O VI 1032 - Peak"] # int or str: window in the HDUList used.depends on the alignmenet you want to do. 
-window_sr = -1 # same for imagers in imager_list
+            "O VI 1032 - Peak"] 
+window_sr = -1 # the HDULIST index for the synthetic raster. 
 path_save_figure= "path/to/output/figures/folder"
 
 param_alignement = {
@@ -122,7 +122,7 @@ Example of a results for co-alignment between a SPICE C III image and a FSI 304 
 
 ## credits
 
-- carrington transform: [F. Auchère](https://github.com/frederic-auchere)
+- Carrington transform: [F. Auchère](https://github.com/frederic-auchere)
 - SPICE utils: [G. Pelouze](https://github.com/gpelouze)
 - matrix transform: [F. Auchère](https://github.com/frederic-auchere)
 
