@@ -1,3 +1,5 @@
 [build-system]
 requires = ["setuptools"]
+authors = ["Antoine Dolliou <antoine.dolliou@universite-paris-saclay.fr>"]
+readme = "README.md"
 build-backend = "setuptools.build_meta"
