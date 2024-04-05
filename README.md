@@ -17,7 +17,8 @@ The co-alignment itself is performed using a cross-correlation tehcnique, throug
 Report any bug you encounter with Github or by e-mail to the author. 
 
 ## Installation
-To create a virtual environement, write the following command in the shell :
+This package is desinged to be used in external python projects, and to be imported as a standard package.
+In your project, a virtual environement can be created with the following command in the shell :
 ```shell
 python -m venv env
 source env/bin/activate # write "deactivate" in shell to go out of your virtual environement. 
@@ -39,9 +40,43 @@ pip install .
 
 ## Usage
 
+Here, we co-register an HRIEUV image with an FSI 174 image.
+
+### Alignment of an HRIEUV image with FSI 174
+```python
+import numpy as np
+from SPICE_alignment.hdrshift.alignement import Alignment
+
+path_hri = "path/to/hri/file/to/align"
+path_fsi = "path/to/FSI174/file"
+
+
+lag_crval1 = np.arange(15, 26, 1)
+lag_crval2 = np.arange(5, 11, 1)
+
+lag_cdelta1 = [0]
+lag_cdelta2 = [0]
+
+lag_crota = [0.75]
+min_value = 0
+max_value = 1310
+
+A = Alignment(large_fov_known_pointing=path_fsi, small_fov_to_correct=path_hri, lag_crval1=lag_crval1,
+              lag_crval2=lag_crval2, lag_cdelta1=lag_cdelta1, lag_cdelta2=lag_cdelta2, lag_crota=lag_crota,
+              parallelism=True, use_tqdm=True, counts_cpu_max=20,
+              small_fov_value_min=min_value, small_fov_value_max=max_value, )
+
+corr = A.align_using_helioprojective(method='correlation')
+max_index = np.unravel_index(corr.argmax(), corr.shape)
+
+```
+
+
+### Alignment of a SPICE raster  
+
 We show here a typical example to align SPICE data with a synthetic raster created from FSI 304 files. 
 
-### Creation of a SPICE synthetic raster 
+####  Creation of a SPICE synthetic raster 
 First of all, we need to create a synthetic raster for the SPICE raster using a list of FSI 304 FITS files.
 ```python
 from SPICE_alignment.synras.map_builder import SPICEComposedMapBuilder
