@@ -40,15 +40,15 @@ pip install .
 
 ## Usage
 
-Here, we co-register an HRIEUV image with an FSI 174 image.
+Here, we co-register an HRIEUV image with an FSI 174 image. We start using Helioprojective coordinates, which is advised if both images are close in time.
 
-### Alignment of an HRIEUV image with FSI 174
+### Alignment of an HRIEUV image with FSI 174 in helioprojective coordinates
 ```python
 import numpy as np
 from SPICE_alignment.hdrshift.alignement import Alignment
 
-path_hri = "path/to/hri/file/to/align"
-path_fsi = "path/to/FSI174/file"
+path_hri = "path/to/HRIEUV.fits"
+path_fsi = "path/to/FSI174.fits"
 
 
 lag_crval1 = np.arange(15, 26, 1)
@@ -71,6 +71,69 @@ max_index = np.unravel_index(corr.argmax(), corr.shape)
 
 ```
 
+### Alignment of HRIEUV with FSI 174 using Carrington coordinates
+
+You can also co-register HRIEUV fits files with FSI 174 images within a common Carrington grid, which is adviced when both images are taken with significant delay. 
+In that case, you have to provide the grid where the aligment is performed. 
+
+```python
+import os.path
+from SPICE_alignment.hdrshift.alignement import Alignment
+import numpy as np
+from SPICE_alignment.plot.plot import PlotFunctions
+from SPICE_alignment.utils.Util import AlignCommonUtil
+
+
+path_fsi = "path/to/FSI174.fits"
+path_hri = "path/to/HRIEUV.fits"
+
+
+path_save_fig = "path/where/to/save/figure"
+path_save_fits = "path/where/to/save/aligned_fits"
+
+parallelism = True
+
+lag_crval1 = np.arange(55, 62, 1)
+lag_crval2 = np.arange(-28, -22, 1)
+lag_crota = [-39.25]
+
+# Here, we build a common Carrington grid where the alignment will be performed.
+lonlims = (200, 300)
+latlims = (-20, 20)  # longitude min and max (degrees)
+shape = [2048, 2048]
+
+
+lag_cdelta1 = [0]
+lag_cdelta2 = [0]
+
+
+
+A = Alignment(large_fov_known_pointing=path_fsi, small_fov_to_correct=path_hri, lag_crval1=lag_crval1,
+          lag_crval2=lag_crval2, lag_cdelta1=lag_cdelta1, lag_cdelta2=lag_cdelta2, lag_crota=lag_crota,
+          parallelism=True, use_tqdm=True,
+          small_fov_window=-1, large_fov_window=-1)
+
+corr = A.align_using_carrington(method='correlation', lonlims=lonlims, latlims=latlims, shape=shape)
+
+parameter_alignment = {
+"lag_crval1": lag_crval1,
+"lag_crval2": lag_crval2,
+"lag_crota": lag_crota,
+"lag_cdelta1": lag_cdelta1,
+"lag_cdelta2": lag_cdelta2,
+
+}
+# breakpoint()
+PlotFunctions.plot_correlation(corr, lag_crval1=lag_crval1, lag_crval2=lag_crval2, lag_drot=lag_crota, show=True,
+                           path_save=os.path.join(path_save_fig, "correlation.pdf"))
+PlotFunctions.plot_co_alignment(small_fov_window=-1, large_fov_window=-1, corr=corr,
+                            small_fov_path=path_hri, large_fov_path=path_fsi, show=True,
+                            results_folder=path_save_fig, levels_percentile=[95],
+                            **parameter_alignment)
+AlignCommonUtil.write_corrected_fits(path_l2_input=path_hri, window_list=[-1],
+                                 path_l2_output=path_save_fits, corr=corr,
+                                 **parameter_alignment)
+```
 
 ### Alignment of a SPICE raster  
 
