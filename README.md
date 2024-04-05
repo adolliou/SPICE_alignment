@@ -24,12 +24,12 @@ python -m venv env
 source env/bin/activate # write "deactivate" in shell to go out of your virtual environement. 
 ```
 
-You can use the pip install + git command, while you are in virtual environment :
+You can use the pip install + git command, while you are in virtual environment, to install the package into your own project.
 
 ```shell
 pip install git+https://github.com/adolliou/SPICE_Alignement
 ```
-or clone the SPICE_alignment repository locally. Then, while you are in your virtual environment:
+You can also clone the SPICE_alignment repository locally. Then, while you are in the virtual environment of your personal project, you can add the Alignment package with the following command :
 
 ```shell
 cd path/to/SPICE_alignment
