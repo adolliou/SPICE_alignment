@@ -31,6 +31,9 @@ class Alignment:
                  small_fov_value_max: object = None, counts_cpu_max: int = 40, large_fov_window: object = -1,
                  small_fov_window: object = -1,
                  path_save_figure: object = None, ) -> object:
+
+        raise ValueError("SPICE_Alignment package is deprecated. Please use https://github.com/adolliou/euispice_coreg instead")
+
         """
 
         @param large_fov_known_pointing: path to the reference file fits (most of the time an imager or a synthetic raster)

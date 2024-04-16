@@ -1,11 +1,11 @@
-# SPICE_Alignement
+# SPICE_Alignment
 
 
 Welcome to the SPICE_alignment python package :artificial_satellite: :sun_with_face:. This package can be used to correct the pointing information of SPICE or HRI-EUV datasets, on board Solar Orbiter. 
 
 ## Description :
 
-This package provide tools to co-align an image from an imager with another one (called "reference" image).  It corrects the pointing information on the FITS header using a cross-correlation algorithm. The data you want to align can be either from an image (i.e. Solar Orbiter/HRI-EUVetc.) or a Solar Orbiter/SPICE raster. Examples on how to align different types of data are provided below.  
+This package provide tools to co-align an image from an imager with another one (called "reference" image).  It corrects the pointing information on the FITS header using a cross-correlation algorithm. The data you want to align can be either from an image (i.e. Solar Orbiter/HRI-EUV etc.) or a Solar Orbiter/SPICE raster. Examples on how to align different types of data are provided below.  
 In addition, the package provides tools to create a synthethic raster corresponding to a given SPICE raster, using the dataset of an imager. The obtained synthetic raster can then be used as the reference image to co-align the SPICE raster.
 
 It is advised to use an imager with a Full Sun field of view as the reference image, with Limb fitting previously applied. Example of them include 
@@ -50,9 +50,15 @@ Here, we co-register an HRIEUV image with an FSI 174 image. We start using Helio
 ```python
 import numpy as np
 from SPICE_alignment.hdrshift.alignement import Alignment
+from SPICE_alignment.plot.plot import PlotFunctions
+from SPICE_alignment.utils.Util import AlignCommonUtil
+import os
 
 path_hri = "path/to/HRIEUV.fits"
 path_fsi = "path/to/FSI174.fits"
+
+path_save_fig = "path/where/to/save/figure"
+path_save_fits = "path/where/to/save/aligned_fits"
 
 
 lag_crval1 = np.arange(15, 26, 1)
@@ -61,7 +67,7 @@ lag_crval2 = np.arange(5, 11, 1)
 lag_cdelta1 = [0]
 lag_cdelta2 = [0]
 
-lag_crota = [0.75]
+lag_crota = [0]
 min_value = 0
 max_value = 1310
 
@@ -72,6 +78,26 @@ A = Alignment(large_fov_known_pointing=path_fsi, small_fov_to_correct=path_hri, 
 
 corr = A.align_using_helioprojective(method='correlation')
 max_index = np.unravel_index(corr.argmax(), corr.shape)
+
+
+parameter_alignment = {
+"lag_crval1": lag_crval1,
+"lag_crval2": lag_crval2,
+"lag_crota": lag_crota,
+"lag_cdelta1": lag_cdelta1,
+"lag_cdelta2": lag_cdelta2,
+
+}
+
+PlotFunctions.plot_correlation(corr, lag_crval1=lag_crval1, lag_crval2=lag_crval2, show=True,
+                           path_save=os.path.join(path_save_fig, "correlation.pdf"))
+PlotFunctions.plot_co_alignment(small_fov_window=-1, large_fov_window=-1, corr=corr,
+                            small_fov_path=path_hri, large_fov_path=path_fsi, show=True,
+                            results_folder=path_save_fig, levels_percentile=[95],
+                            **parameter_alignment)
+AlignCommonUtil.write_corrected_fits(path_l2_input=path_hri, window_list=[-1],
+                                 path_l2_output=path_save_fits, corr=corr,
+                                 **parameter_alignment)
 
 ```
 
@@ -127,7 +153,7 @@ parameter_alignment = {
 "lag_cdelta2": lag_cdelta2,
 
 }
-# breakpoint()
+
 PlotFunctions.plot_correlation(corr, lag_crval1=lag_crval1, lag_crval2=lag_crval2, lag_drot=lag_crota, show=True,
                            path_save=os.path.join(path_save_fig, "correlation.pdf"))
 PlotFunctions.plot_co_alignment(small_fov_window=-1, large_fov_window=-1, corr=corr,
@@ -163,7 +189,7 @@ C = SPICEComposedMapBuilder(path_to_spectro=path_spice, list_imager_paths=path_t
                                threshold_time=threshold_time)
 C.process(path_output=output_L3_fits)
 ```
-### Align SPICE raster with the synthetic raster
+#### Alignement of the SPICE raster with the synthetic raster
 
 The code first creates a SPICE pseudo raster by spectrally summing over the chosen HDUList window (here, the C III window). It then cross-correlates the SPICE image with the synthetic raster, while shifting the header values of the SPICE image.
 It returns a cross-correlation matrix that can be used to determine the optimal shift to apply to the header values.
@@ -228,7 +254,7 @@ Example of a results for co-alignment between a SPICE C III image and a FSI 304 
 
 - Carrington transform: [F. Auchère](https://github.com/frederic-auchere)
 - SPICE utils: [G. Pelouze](https://github.com/gpelouze)
-- matrix transform: [F. Auchère](https://github.com/frederic-auchere)
+- Matrix transform: [F. Auchère](https://github.com/frederic-auchere)
 
 ## Contact
 
