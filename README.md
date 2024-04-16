@@ -1,23 +1,26 @@
 # SPICE_Alignement
 
+
+Welcome to the SPICE_alignment python package :artificial_satellite: :sun_with_face:. This package can be used to correct the pointing information of SPICE or HRI-EUV datasets, on board Solar Orbiter. 
+
 ## Description :
 
-This package provide tools to co-align an image with another one (called "reference" image).  You can provide an imager as input, using the Alignment class. You can also provide a SPICE raster, using the specific SpiceAlignment class. 
-In addition, the pakcage provides tools to create a synthethic raster corresponding to a given SPICE raster, using a time sequence of imager. The obtained synthetic raster can then be used as the reference image to co-align the SPICE raster.
+This package provide tools to co-align an image from an imager with another one (called "reference" image).  It corrects the pointing information on the FITS header using a cross-correlation algorithm. The data you want to align can be either from an image (i.e. Solar Orbiter/HRI-EUVetc.) or a Solar Orbiter/SPICE raster. Examples on how to align different types of data are provided below.  
+In addition, the package provides tools to create a synthethic raster corresponding to a given SPICE raster, using the dataset of an imager. The obtained synthetic raster can then be used as the reference image to co-align the SPICE raster.
 
-It is advised to use an imager with a Full Sun field of view as the reference image, where Limb fitting has been previously applied. Example of them include 
-the L2 FITS files of the FSI 174 and 304 imagers. 
-The co-alignment itself is performed using a cross-correlation tehcnique, through the Pearson's coefficient, or the residus method. The alignement can be done in the following coordinates: 
+It is advised to use an imager with a Full Sun field of view as the reference image, with Limb fitting previously applied. Example of them include 
+the L2 FITS files of the FSI 174 and 304 imagers on board Solar Orbiter. 
+The co-alignment itself is performed using a cross-correlation tehcnique, through the Pearson's coefficient, or the residus method. The alignement can be done in the following frames: 
 
-- Helioprojective coordinates.
-- Carrington coordinates. In that case, you have to provide the information to build a pixel grid in a carrington frame.
-- by slicing over the image pixels, complitely neglecting the headers informations.
+- Helioprojective.
+- Carrington. In that case, you have to provide the information to build a pixel grid in a carrington frame.
+- by slicing over the image pixels, complitely neglecting the headers information. (experimental)
 
-**Warning** As of now, the code works for day to day cases, but has not been thouroughly tested. Please verify the results with the plot_co_alignment method.
-Report any bug you encounter with Github or by e-mail to the author. 
+**Warning** As of now, the code works for day to day cases, but has not been thouroughly tested. Please always verify the results with the plot_co_alignment method.
+Report any bug you encounter with Github or by e-mailing the author (see adress at the end of the readme). 
 
 ## Installation
-This package is desinged to be used in external python projects, and to be imported as a standard package.
+This package is designed to be used in your personal python projects, and to be imported as a standard package.
 In your project, a virtual environement can be created with the following command in the shell :
 ```shell
 python -m venv env
@@ -39,10 +42,11 @@ pip install .
 
 
 ## Usage
-
-Here, we co-register an HRIEUV image with an FSI 174 image. We start using Helioprojective coordinates, which is advised if both images are close in time.
+We provide multiple examples on how to use the code, using different data types, and on different frames. 
 
 ### Alignment of an HRIEUV image with FSI 174 in helioprojective coordinates
+Here, we co-register an HRIEUV image with an FSI 174 image. We start using Helioprojective coordinates, which is advised if both images are close in time.
+
 ```python
 import numpy as np
 from SPICE_alignment.hdrshift.alignement import Alignment
